@@ -1,16 +1,16 @@
+/* eslint-disable no-undef */
 module.exports = {
     mount: {
-        public: "/",
-        src: "/dist"
+        public: '/',
+        src: '/dist',
     },
-    devOptions: {
-    },
+    devOptions: {},
     buildOptions: {
-        out: "_build"
+        out: '_build',
     },
     optimize: {
         bundle: true,
         minify: true,
-        sourcemap: false
-    }
+        sourcemap: false,
+    },
 };
