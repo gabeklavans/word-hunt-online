@@ -9,7 +9,6 @@ module.exports = {
         'no-console': 1,
         quotes: ['error', 'single'],
         curly: 0,
-        'brace-style': ['error', 'stroustrup'],
         indent: ['error', 4],
         '@typescript-eslint/no-unused-vars': 2,
     },

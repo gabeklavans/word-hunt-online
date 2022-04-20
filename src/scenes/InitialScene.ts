@@ -84,6 +84,16 @@ export default class InitialScene extends Phaser.Scene {
                 );
             }
         }
+
+        this.add
+            .rectangle(
+                this.tileGrid[0][0].container.getBounds().x,
+                this.tileGrid[0][0].container.getBounds().y,
+                this.LETTER_SPRITE_SIZE * this.GRID_SIZE,
+                this.LETTER_SPRITE_SIZE * this.GRID_SIZE
+            )
+            .setOrigin(0, 0)
+            .setStrokeStyle(2, 0x00ff00);
     }
 
     startChain(tile: Tile) {
@@ -113,7 +123,6 @@ export default class InitialScene extends Phaser.Scene {
     endChain() {
         if (this.isDragging) {
             this.imageGroup.setTint(0xffffff);
-            console.log(this.currentChain);
             this.currentChain = [];
         }
         this.isDragging = false;
