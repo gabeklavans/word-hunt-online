@@ -14,9 +14,9 @@
   "author": "paulasantamaria",
   "license": "MIT",
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.18.0",
-    "@typescript-eslint/parser": "^5.18.0",
-    "eslint": "^8.12.0",
+    "@typescript-eslint/eslint-plugin": "^5.20.0",
+    "@typescript-eslint/parser": "^5.20.0",
+    "eslint": "^8.13.0",
     "phaser": "^3.55.2",
     "snowpack": "^3.8.8",
     "typescript": "^4.6.3"
