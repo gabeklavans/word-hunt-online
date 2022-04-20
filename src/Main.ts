@@ -5,8 +5,8 @@ import InitialScene from './scenes/InitialScene';
 
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    width: window.innerWidth * window.devicePixelRatio,
+    height: window.innerHeight * window.devicePixelRatio,
     physics: {
         default: 'arcade',
         arcade: {

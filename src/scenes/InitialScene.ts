@@ -1,12 +1,20 @@
 export default class InitialScene extends Phaser.Scene {
-    tileGroup!: Phaser.GameObjects.Group;
-    currentChain!: [];
+    imageGroup!: Phaser.GameObjects.Group;
+    tileContainerGroup!: Phaser.GameObjects.Group;
+    tileGrid: Tile[][] = [];
 
-    readonly LETTER_SPRITE_SIZE = 70;
+    currentChain: Tile[] = [];
+
+    readonly LETTER_SPRITE_SIZE = 100;
+    readonly GRID_SIZE = 5;
     isDragging = false;
 
     constructor() {
         super('initial');
+
+        for (let i = 0; i < this.GRID_SIZE; i++) {
+            this.tileGrid.push([]);
+        }
     }
 
     create(): void {
@@ -14,56 +22,100 @@ export default class InitialScene extends Phaser.Scene {
         this.input.addListener('pointerup', () => this.endChain());
 
         // the rest
-        this.tileGroup = this.add.group({
-            classType: Phaser.GameObjects.Image,
-        });
+        this.imageGroup = this.add.group();
+        this.tileContainerGroup = this.add.group();
 
-        const rowSize = 3;
-        for (let i = 0; i < rowSize; i++) {
-            this.tileGroup.add(
-                this.add
-                    .image(
-                        this.cameras.main.width / 2 +
-                            (i - Math.floor(rowSize / 2)) * 100,
-                        200,
-                        'acho'
-                    )
+        // create all images and add to containers
+        for (let i = 0; i < this.GRID_SIZE; i++) {
+            for (let col = 0; col < this.GRID_SIZE; col++) {
+                const image = this.add
+                    .image(0, 0, 'acho')
                     .setDisplaySize(
                         this.LETTER_SPRITE_SIZE,
                         this.LETTER_SPRITE_SIZE
                     )
-            );
+                    .setName('image');
+                const tileContainer = this.add.container(
+                    this.cameras.main.width / 2 +
+                        (i - Math.floor(this.GRID_SIZE / 2)) *
+                            this.LETTER_SPRITE_SIZE,
+                    this.cameras.main.height / 2 +
+                        (col - Math.floor(this.GRID_SIZE / 2)) *
+                            this.LETTER_SPRITE_SIZE,
+                    image
+                );
+                this.tileGrid[i].push({
+                    letter: 'A',
+                    container: tileContainer,
+                });
+                this.imageGroup.add(image);
+            }
+        }
 
-            for (const child of this.tileGroup.getChildren()) {
-                const childImage = child as Phaser.GameObjects.Image;
-                childImage
+        // set up containers
+        for (const tileRow of this.tileGrid) {
+            for (const tile of tileRow) {
+                const tileContainer = tile.container;
+                const tileImage = tileContainer.getByName(
+                    'image'
+                ) as Phaser.GameObjects.Image;
+
+                // enable interactions
+                tileContainer
                     .setInteractive(
                         new Phaser.Geom.Circle(
-                            childImage.height / 2,
-                            childImage.width / 2,
-                            childImage.height / 2
+                            0,
+                            0,
+                            tileImage.displayHeight / 2
                         ),
                         Phaser.Geom.Circle.Contains
                     )
-                    .on('pointerover', () => this.addToChain(childImage))
-                    .on('pointerdown', () => this.startChain(childImage));
+                    .on('pointerover', () => this.addToChain(tile))
+                    .on('pointerdown', () => this.startChain(tile));
+
+                // draw on letters
+                tileContainer.add(
+                    this.add
+                        .text(0, 0, tile.letter.toUpperCase(), {
+                            color: 'black',
+                            fontSize: `${this.LETTER_SPRITE_SIZE / 2}px`,
+                        })
+                        .setOrigin(0.5)
+                );
             }
         }
     }
 
-    startChain(tile: Phaser.GameObjects.Image) {
+    startChain(tile: Tile) {
         this.isDragging = true;
-        tile.setTint(0x00ff00);
+        const tileImage = tile.container.getByName(
+            'image'
+        ) as Phaser.GameObjects.Image;
+        tileImage.setTint(0x00ff00);
+
+        this.currentChain.push(tile);
     }
 
-    addToChain(tile: Phaser.GameObjects.Image) {
+    addToChain(tile: Tile) {
         if (this.isDragging) {
-            tile.setTint(0xff0000);
+            if (!this.currentChain.includes(tile)) {
+                const tileImage = tile.container.getByName(
+                    'image'
+                ) as Phaser.GameObjects.Image;
+                tileImage.setTint(0xff0000);
+                this.currentChain.push(tile);
+            } else {
+                this.endChain();
+            }
         }
     }
 
     endChain() {
+        if (this.isDragging) {
+            this.imageGroup.setTint(0xffffff);
+            console.log(this.currentChain);
+            this.currentChain = [];
+        }
         this.isDragging = false;
-        this.tileGroup.setTint(0xffffff);
     }
 }
