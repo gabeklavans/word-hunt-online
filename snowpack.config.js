@@ -6,6 +6,7 @@ module.exports = {
     },
     devOptions: {
         port: 8081,
+        open: 'none',
     },
     buildOptions: {
         out: '_build',

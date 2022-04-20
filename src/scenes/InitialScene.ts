@@ -1,4 +1,7 @@
 export default class InitialScene extends Phaser.Scene {
+    tileGroup!: Phaser.GameObjects.Group;
+    currentChain!: [];
+
     readonly LETTER_SPRITE_SIZE = 70;
     isDragging = false;
 
@@ -8,20 +11,16 @@ export default class InitialScene extends Phaser.Scene {
 
     create(): void {
         // listeners
-        this.input.addListener('pointerup', () => {
-            this.isDragging = false;
-            console.log('ya up');
-        });
+        this.input.addListener('pointerup', () => this.endChain());
 
         // the rest
-        const tileGroup = this.add.group({
+        this.tileGroup = this.add.group({
             classType: Phaser.GameObjects.Image,
         });
-        console.log(this.cameras.main.width);
 
         const rowSize = 3;
         for (let i = 0; i < rowSize; i++) {
-            tileGroup.add(
+            this.tileGroup.add(
                 this.add
                     .image(
                         this.cameras.main.width / 2 +
@@ -35,7 +34,7 @@ export default class InitialScene extends Phaser.Scene {
                     )
             );
 
-            for (const child of tileGroup.getChildren()) {
+            for (const child of this.tileGroup.getChildren()) {
                 const childImage = child as Phaser.GameObjects.Image;
                 childImage
                     .setInteractive(
@@ -46,18 +45,25 @@ export default class InitialScene extends Phaser.Scene {
                         ),
                         Phaser.Geom.Circle.Contains
                     )
-                    .on('pointerover', () => this.startChain(childImage))
-                    .on('pointerdown', () => {
-                        this.isDragging = true;
-                        childImage.setTint(0x00ff00);
-                    });
+                    .on('pointerover', () => this.addToChain(childImage))
+                    .on('pointerdown', () => this.startChain(childImage));
             }
         }
     }
 
     startChain(tile: Phaser.GameObjects.Image) {
+        this.isDragging = true;
+        tile.setTint(0x00ff00);
+    }
+
+    addToChain(tile: Phaser.GameObjects.Image) {
         if (this.isDragging) {
             tile.setTint(0xff0000);
         }
+    }
+
+    endChain() {
+        this.isDragging = false;
+        this.tileGroup.setTint(0xffffff);
     }
 }
