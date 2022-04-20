@@ -4,7 +4,9 @@ module.exports = {
         public: '/',
         src: '/dist',
     },
-    devOptions: {},
+    devOptions: {
+        port: 8081,
+    },
     buildOptions: {
         out: '_build',
     },

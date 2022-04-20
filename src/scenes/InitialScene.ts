@@ -42,20 +42,22 @@ export default class InitialScene extends Phaser.Scene {
                         new Phaser.Geom.Circle(
                             childImage.height / 2,
                             childImage.width / 2,
-                            80
+                            childImage.height / 2
                         ),
                         Phaser.Geom.Circle.Contains
                     )
-                    .on('pointerover', () => {
-                        if (this.isDragging) {
-                            childImage.setTint(0xff0000);
-                        }
-                    })
+                    .on('pointerover', () => this.startChain(childImage))
                     .on('pointerdown', () => {
                         this.isDragging = true;
                         childImage.setTint(0x00ff00);
                     });
             }
+        }
+    }
+
+    startChain(tile: Phaser.GameObjects.Image) {
+        if (this.isDragging) {
+            tile.setTint(0xff0000);
         }
     }
 }
