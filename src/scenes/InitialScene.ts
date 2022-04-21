@@ -6,10 +6,7 @@ export default class InitialScene extends Phaser.Scene {
 
     currentChain: Tile[] = [];
 
-    readonly LETTER_SPRITE_SIZE =
-        window.innerWidth < window.innerHeight
-            ? Math.floor(window.innerWidth / 8)
-            : Math.floor(window.innerHeight / 8);
+    readonly LETTER_SPRITE_SIZE = 100;
     readonly GRID_SIZE = 5;
     isDragging = false;
 
