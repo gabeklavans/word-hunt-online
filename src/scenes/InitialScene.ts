@@ -28,8 +28,6 @@ export default class InitialScene extends Phaser.Scene {
                 : gameWidth / (this.GRID_SIZE + 1);
         // listeners
         this.input.addListener('pointerup', () => {
-            console.log('pointerup');
-
             this.endChain();
         });
 
@@ -83,11 +81,9 @@ export default class InitialScene extends Phaser.Scene {
                         Phaser.Geom.Circle.Contains
                     )
                     .on('pointerover', () => {
-                        console.log('pointerover container');
                         this.addToChain(tile);
                     })
                     .on('pointerdown', () => {
-                        console.log('pointerdown container');
                         this.startChain(tile);
                     });
 
@@ -141,20 +137,15 @@ export default class InitialScene extends Phaser.Scene {
     }
 
     startChain(tile: Tile) {
-        console.log(`startChain, ${this.isDragging}`);
         const tileImage = tile.container.getByName(
             'image'
         ) as Phaser.GameObjects.Image;
         tileImage.setTint(0x00ff00);
-
         this.currentChain.push(tile);
-        console.log(`pushed ${tile}`);
-
         this.isDragging = true;
     }
 
     addToChain(tile: Tile) {
-        console.log(`addToChain, ${this.isDragging}`);
         if (this.isDragging) {
             if (!this.currentChain.includes(tile)) {
                 const tileImage = tile.container.getByName(
@@ -164,16 +155,12 @@ export default class InitialScene extends Phaser.Scene {
                 this.currentChain.push(tile);
             } else if (this.currentChain.length > 1) {
                 // need's a > 1 check cause touch events happen too fast
-                console.log(`${tile} already in chain`);
-
                 this.endChain();
             }
         }
     }
 
     endChain() {
-        console.log(`endchain, ${this.isDragging}`);
-
         if (this.isDragging) {
             this.imageGroup.setTint(0xffffff);
             this.currentChain = [];
