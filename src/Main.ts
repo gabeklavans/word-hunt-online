@@ -19,7 +19,7 @@ const config: Phaser.Types.Core.GameConfig = {
         },
     },
     scene: [PreloaderScene, InitialScene],
-    backgroundColor: '#ffffff',
+    transparent: true,
 };
 
 export default new Phaser.Game(config);
