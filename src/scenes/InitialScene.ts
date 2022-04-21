@@ -91,7 +91,7 @@ export default class InitialScene extends Phaser.Scene {
         });
 
         // add the board boundary
-        const boardPlane = this.add
+        this.add
             .rectangle(
                 this.tileGrid[0][0].container.getBounds().x,
                 this.tileGrid[0][0].container.getBounds().y,
