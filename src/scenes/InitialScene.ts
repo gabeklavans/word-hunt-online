@@ -2,6 +2,7 @@ export default class InitialScene extends Phaser.Scene {
     imageGroup!: Phaser.GameObjects.Group;
     tileContainerGroup!: Phaser.GameObjects.Group;
     tileGrid: Tile[][] = [];
+    graphics!: Phaser.GameObjects.Graphics;
 
     currentChain: Tile[] = [];
 
@@ -85,7 +86,12 @@ export default class InitialScene extends Phaser.Scene {
             }
         }
 
-        this.add
+        this.graphics = this.add.graphics({
+            lineStyle: { width: 4, color: 0xaa00aa },
+        });
+
+        // add the board boundary
+        const boardPlane = this.add
             .rectangle(
                 this.tileGrid[0][0].container.getBounds().x,
                 this.tileGrid[0][0].container.getBounds().y,
@@ -93,7 +99,22 @@ export default class InitialScene extends Phaser.Scene {
                 this.LETTER_SPRITE_SIZE * this.GRID_SIZE
             )
             .setOrigin(0, 0)
-            .setStrokeStyle(2, 0x00ff00);
+            .setStrokeStyle(2, 0x00ff00)
+            .setInteractive(
+                new Phaser.Geom.Rectangle(
+                    this.tileGrid[0][0].container.getBounds().x,
+                    this.tileGrid[0][0].container.getBounds().y,
+                    this.LETTER_SPRITE_SIZE * this.GRID_SIZE,
+                    this.LETTER_SPRITE_SIZE * this.GRID_SIZE
+                ),
+                this.pointExitRect
+            )
+            .on('pointerover', () => this.endChain())
+            .setDepth(-1);
+    }
+
+    pointExitRect(rect: Phaser.Geom.Rectangle, x: number, y: number) {
+        return x < 0 || y < 0 || x > rect.width || y > rect.height;
     }
 
     startChain(tile: Tile) {
