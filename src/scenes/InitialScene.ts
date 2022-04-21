@@ -36,7 +36,7 @@ export default class InitialScene extends Phaser.Scene {
         this.tileContainerGroup = this.add.group();
 
         // create all images and add to containers
-        for (let i = 0; i < this.GRID_SIZE; i++) {
+        for (let row = 0; row < this.GRID_SIZE; row++) {
             for (let col = 0; col < this.GRID_SIZE; col++) {
                 const image = this.add
                     .image(0, 0, 'acho')
@@ -47,16 +47,18 @@ export default class InitialScene extends Phaser.Scene {
                     .setName('image');
                 const tileContainer = this.add.container(
                     this.cameras.main.width / 2 +
-                        (i - this.GRID_SIZE / 2) * this.LETTER_SPRITE_SIZE +
+                        (row - this.GRID_SIZE / 2) * this.LETTER_SPRITE_SIZE +
                         this.LETTER_SPRITE_SIZE / 2,
                     this.cameras.main.height / 2 +
                         (col - this.GRID_SIZE / 2) * this.LETTER_SPRITE_SIZE +
                         this.LETTER_SPRITE_SIZE / 2,
                     image
                 );
-                this.tileGrid[i].push({
+                this.tileGrid[row].push({
                     letter: 'A',
                     container: tileContainer,
+                    row: row,
+                    col: col,
                 });
                 this.imageGroup.add(image);
             }
@@ -81,7 +83,7 @@ export default class InitialScene extends Phaser.Scene {
                         Phaser.Geom.Circle.Contains
                     )
                     .on('pointerover', () => {
-                        this.addToChain(tile);
+                        this.handleAddToChain(tile);
                     })
                     .on('pointerdown', () => {
                         this.startChain(tile);
@@ -129,6 +131,7 @@ export default class InitialScene extends Phaser.Scene {
 
         if (DEBUG) {
             boardBox.setStrokeStyle(2, 0x00ff00);
+            console.log(this.tileGrid);
         }
     }
 
@@ -145,18 +148,69 @@ export default class InitialScene extends Phaser.Scene {
         this.isDragging = true;
     }
 
-    addToChain(tile: Tile) {
+    handleAddToChain(tile: Tile) {
         if (this.isDragging) {
             if (!this.currentChain.includes(tile)) {
-                const tileImage = tile.container.getByName(
-                    'image'
-                ) as Phaser.GameObjects.Image;
-                tileImage.setTint(0xff0000);
-                this.currentChain.push(tile);
+                // check for skipped tiles and fill them in for the player
+                const lastTileInChain =
+                    this.currentChain[this.currentChain.length - 1];
+                if (
+                    Phaser.Math.Distance.Between(
+                        lastTileInChain.row,
+                        lastTileInChain.col,
+                        tile.row,
+                        tile.col
+                    ) > Math.sqrt(2)
+                ) {
+                    // skipped tiles detected!
+                    // draw a line and fill in the intersected tiles
+                    const intersectLine = new Phaser.Geom.Line(
+                        lastTileInChain.container.x,
+                        lastTileInChain.container.y,
+                        tile.container.x,
+                        tile.container.y
+                    );
+
+                    // loop thru all the tiles' hitboxes and check for intersect,
+                    // cause I can't figure out a better way to do it using Phaser...
+                    for (const childTile of this.tileGrid.flat()) {
+                        const childContainer =
+                            childTile.container as Phaser.GameObjects.Container;
+                        if (
+                            Phaser.Geom.Intersects.LineToCircle(
+                                intersectLine,
+                                new Phaser.Geom.Circle(
+                                    childContainer.x,
+                                    childContainer.y,
+                                    (
+                                        childContainer.input
+                                            .hitArea as Phaser.Geom.Circle
+                                    ).radius
+                                )
+                            )
+                        ) {
+                            this.addToChain(childTile);
+                        }
+                    }
+                }
+
+                // finally push the current tile to the chain
+                this.addToChain(tile);
             } else if (this.currentChain.length > 1) {
-                // need's a > 1 check cause touch events happen too fast
+                // needs a > 1 check cause touch events happen too fast
                 this.endChain();
             }
+        }
+    }
+
+    addToChain(tile: Tile) {
+        if (!this.currentChain.includes(tile)) {
+            const tileImage = tile.container.getByName(
+                'image'
+            ) as Phaser.GameObjects.Image;
+            tileImage.setTint(0xff0000);
+
+            this.currentChain.push(tile);
         }
     }
 
