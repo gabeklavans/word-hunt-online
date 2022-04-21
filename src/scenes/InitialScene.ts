@@ -72,7 +72,12 @@ export default class InitialScene extends Phaser.Scene {
                         Phaser.Geom.Circle.Contains
                     )
                     .on('pointerover', () => this.addToChain(tile))
-                    .on('pointerdown', () => this.startChain(tile));
+                    .on('pointerdown', () => {
+                        this.cameras.main.setBackgroundColor(
+                            Math.random() * 255 * 255 * 255
+                        );
+                        this.startChain(tile);
+                    });
 
                 // draw on letters
                 tileContainer.add(
