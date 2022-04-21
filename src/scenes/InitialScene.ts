@@ -79,6 +79,7 @@ export default class InitialScene extends Phaser.Scene {
                         this.startChain(tile);
                     });
 
+                this.input.enableDebug(tileContainer, 0x0000ff);
                 // draw on letters
                 tileContainer.add(
                     this.add
@@ -114,7 +115,7 @@ export default class InitialScene extends Phaser.Scene {
                 ),
                 this.pointExitRect
             )
-            .on('pointerover', () => this.endChain())
+            // .on('pointerover', () => this.endChain())
             .setDepth(-1);
     }
 
