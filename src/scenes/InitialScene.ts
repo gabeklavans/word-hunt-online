@@ -1,16 +1,19 @@
+import { TextFrequency } from 'correct-frequency-random-letters';
+const dictionary = new TextFrequency();
+
 const DEBUG = true;
 
 export default class InitialScene extends Phaser.Scene {
     imageGroup!: Phaser.GameObjects.Group;
     tileContainerGroup!: Phaser.GameObjects.Group;
     tileGrid: Tile[][] = [];
-    graphics!: Phaser.GameObjects.Graphics;
 
     currentChain: Tile[] = [];
 
-    LETTER_SPRITE_SIZE!: number;
-    readonly GRID_SIZE = 4;
     isDragging = false;
+    LETTER_SPRITE_SIZE!: number;
+
+    readonly GRID_SIZE = 4;
 
     constructor() {
         super('initial');
@@ -55,7 +58,7 @@ export default class InitialScene extends Phaser.Scene {
                     image
                 );
                 this.tileGrid[row].push({
-                    letter: 'A',
+                    letter: dictionary.random(),
                     container: tileContainer,
                     row: row,
                     col: col,
@@ -103,10 +106,6 @@ export default class InitialScene extends Phaser.Scene {
                 );
             }
         }
-
-        this.graphics = this.add.graphics({
-            lineStyle: { width: 4, color: 0xaa00aa },
-        });
 
         // add the board boundary
         const boardBox = this.add
