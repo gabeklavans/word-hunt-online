@@ -155,8 +155,7 @@ export default class InitialScene extends Phaser.Scene {
         const wordList = await fetch('assets/2of12.txt').then((response) =>
             response.text()
         );
-        const wordArr = wordList.split('\n');
-        console.log(wordArr[0]);
+        const wordArr = wordList.split('\r\n');
 
         return wordArr;
     }
@@ -287,6 +286,7 @@ export default class InitialScene extends Phaser.Scene {
                             }
                         }
                     }
+
                     // this letter map won't change anymore, so add its words to the dict set
                     for (const potentialWord of tileLetterMap.keys()) {
                         const potentialWordRev = potentialWord
@@ -295,13 +295,13 @@ export default class InitialScene extends Phaser.Scene {
                             .join('');
                         if (
                             potentialWord.length >= 3 &&
-                            spell.includes(potentialWord)
+                            spell.includes(potentialWord.toLowerCase())
                         ) {
                             foundWords.add(potentialWord);
                         }
                         if (
                             potentialWordRev.length >= 3 &&
-                            spell.includes(potentialWordRev)
+                            spell.includes(potentialWordRev.toLowerCase())
                         ) {
                             foundWords.add(potentialWordRev);
                         }
@@ -309,6 +309,8 @@ export default class InitialScene extends Phaser.Scene {
                 }
             }
         }
+
+        console.log(pathMap);
 
         return foundWords;
     }
