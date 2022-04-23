@@ -1,5 +1,11 @@
 import { TextFrequency } from 'correct-frequency-random-letters';
-const dictionary = new TextFrequency();
+const letterGenerator = new TextFrequency();
+
+import NSpell from 'nspell';
+// import dictionaryEn from 'dictionary-en';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+// const SpellChecker = require('simple-spellchecker');
+const dictionary = ['THE', 'WOW', 'AND'];
 
 const DEBUG = true;
 
@@ -50,15 +56,15 @@ export default class InitialScene extends Phaser.Scene {
                     .setName('image');
                 const tileContainer = this.add.container(
                     this.cameras.main.width / 2 +
-                        (row - this.GRID_SIZE / 2) * this.LETTER_SPRITE_SIZE +
+                        (col - this.GRID_SIZE / 2) * this.LETTER_SPRITE_SIZE +
                         this.LETTER_SPRITE_SIZE / 2,
                     this.cameras.main.height / 2 +
-                        (col - this.GRID_SIZE / 2) * this.LETTER_SPRITE_SIZE +
+                        (row - this.GRID_SIZE / 2) * this.LETTER_SPRITE_SIZE +
                         this.LETTER_SPRITE_SIZE / 2,
                     image
                 );
                 this.tileGrid[row].push({
-                    letter: dictionary.random(),
+                    letter: letterGenerator.random(),
                     container: tileContainer,
                     row: row,
                     col: col,
@@ -130,8 +136,29 @@ export default class InitialScene extends Phaser.Scene {
 
         if (DEBUG) {
             boardBox.setStrokeStyle(2, 0x00ff00);
+            // eslint-disable-next-line no-console
             console.log(this.tileGrid);
+            this.getWords(this.tileGrid).then((foundWords) =>
+                console.log(foundWords)
+            );
         }
+    }
+
+    async loadSpellCheck() {
+        // const dic = await fetch('assets/en_US.dic').then((response) =>
+        //     response.text()
+        // );
+        // const aff = await fetch('assets/en_US.aff').then((response) =>
+        //     response.text()
+        // );
+        // return NSpell(aff, dic);
+        const wordList = await fetch('assets/2of12.txt').then((response) =>
+            response.text()
+        );
+        const wordArr = wordList.split('\n');
+        console.log(wordArr[0]);
+
+        return wordArr;
     }
 
     pointExitRect(rect: Phaser.Geom.Rectangle, x: number, y: number) {
@@ -219,5 +246,93 @@ export default class InitialScene extends Phaser.Scene {
             this.currentChain = [];
         }
         this.isDragging = false;
+    }
+
+    /**
+     * Get all words in board using (inefficient) \~tabulation\~ (NOT recursion)
+     * @param board The 2D array of all tiles in the board
+     */
+    async getWords(board: Tile[][]) {
+        const foundWords = new Set<string>();
+        const spell = await this.loadSpellCheck();
+
+        // Tile -> map of strings
+        const pathMap = new Map<Tile, Map<string, Tile>>();
+        // init map for every tile with its letter as the string and itself origination tile
+        for (const tile of this.tileGrid.flat()) {
+            // strings -> origination Tiles
+            const letterMap = new Map();
+            letterMap.set(tile.letter, tile);
+            pathMap.set(tile, letterMap);
+        }
+
+        for (let row = 0; row < this.GRID_SIZE; row++) {
+            for (let col = 0; col < this.GRID_SIZE; col++) {
+                const tile = board[row][col];
+                const tileLetterMap = pathMap.get(tile);
+                if (tileLetterMap != null) {
+                    const neighbors = this.getTileNeighbors(row, col);
+                    for (const neighborTile of neighbors) {
+                        const neighborMap = pathMap.get(neighborTile);
+                        if (neighborMap != null) {
+                            for (const neighborMapEntry of neighborMap.entries()) {
+                                // make sure not to add a cycle
+                                if (neighborMapEntry[1] !== tile) {
+                                    tileLetterMap.set(
+                                        neighborMapEntry[0] + tile.letter,
+                                        // carry over the originator of the string to avoid cycles
+                                        neighborMapEntry[1]
+                                    );
+                                }
+                            }
+                        }
+                    }
+                    // this letter map won't change anymore, so add its words to the dict set
+                    for (const potentialWord of tileLetterMap.keys()) {
+                        const potentialWordRev = potentialWord
+                            .split('')
+                            .reverse()
+                            .join('');
+                        if (
+                            potentialWord.length >= 3 &&
+                            spell.includes(potentialWord)
+                        ) {
+                            foundWords.add(potentialWord);
+                        }
+                        if (
+                            potentialWordRev.length >= 3 &&
+                            spell.includes(potentialWordRev)
+                        ) {
+                            foundWords.add(potentialWordRev);
+                        }
+                    }
+                }
+            }
+        }
+
+        return foundWords;
+    }
+
+    getTileNeighbors(row: number, col: number) {
+        const neighbors: Tile[] = [];
+        for (let rowOffset = -1; rowOffset < 2; rowOffset++) {
+            for (let colOffset = -1; colOffset < 2; colOffset++) {
+                // don't add self as neighbor
+                if (!(rowOffset == 0 && colOffset == 0)) {
+                    const neighborRow = row + rowOffset;
+                    const neighborCol = col + colOffset;
+                    if (
+                        neighborRow >= 0 &&
+                        neighborRow < this.GRID_SIZE &&
+                        neighborCol >= 0 &&
+                        neighborCol < this.GRID_SIZE
+                    ) {
+                        neighbors.push(this.tileGrid[neighborRow][neighborCol]);
+                    }
+                }
+            }
+        }
+
+        return neighbors;
     }
 }
