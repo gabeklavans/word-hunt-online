@@ -23,8 +23,6 @@
     "typescript": "^4.6.3"
   },
   "dependencies": {
-    "correct-frequency-random-letters": "^1.0.1",
-    "dictionary-en": "^3.2.0",
-    "nspell": "^2.1.5"
+    "correct-frequency-random-letters": "^1.0.1"
   }
 }

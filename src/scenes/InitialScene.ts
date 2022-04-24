@@ -1,12 +1,6 @@
 import { TextFrequency } from 'correct-frequency-random-letters';
 const letterGenerator = new TextFrequency();
 
-import NSpell from 'nspell';
-// import dictionaryEn from 'dictionary-en';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-// const SpellChecker = require('simple-spellchecker');
-const dictionary = ['THE', 'WOW', 'AND'];
-
 const DEBUG = true;
 
 export default class InitialScene extends Phaser.Scene {
@@ -144,22 +138,6 @@ export default class InitialScene extends Phaser.Scene {
         }
     }
 
-    async loadSpellCheck() {
-        // const dic = await fetch('assets/en_US.dic').then((response) =>
-        //     response.text()
-        // );
-        // const aff = await fetch('assets/en_US.aff').then((response) =>
-        //     response.text()
-        // );
-        // return NSpell(aff, dic);
-        const wordList = await fetch('assets/2of12.txt').then((response) =>
-            response.text()
-        );
-        const wordArr = wordList.split('\r\n');
-
-        return wordArr;
-    }
-
     pointExitRect(rect: Phaser.Geom.Rectangle, x: number, y: number) {
         return x < 0 || y < 0 || x > rect.width || y > rect.height;
     }
@@ -253,7 +231,7 @@ export default class InitialScene extends Phaser.Scene {
      */
     async getWords(board: Tile[][]) {
         const foundWords = new Set<string>();
-        const spell = await this.loadSpellCheck();
+        const dictionary = await this.loadSpellCheck();
 
         // Tile -> map of strings
         const pathMap = new Map<Tile, Map<string, Tile>>();
@@ -295,13 +273,13 @@ export default class InitialScene extends Phaser.Scene {
                             .join('');
                         if (
                             potentialWord.length >= 3 &&
-                            spell.includes(potentialWord.toLowerCase())
+                            dictionary.has(potentialWord.toLowerCase())
                         ) {
                             foundWords.add(potentialWord);
                         }
                         if (
                             potentialWordRev.length >= 3 &&
-                            spell.includes(potentialWordRev.toLowerCase())
+                            dictionary.has(potentialWordRev.toLowerCase())
                         ) {
                             foundWords.add(potentialWordRev);
                         }
@@ -310,9 +288,18 @@ export default class InitialScene extends Phaser.Scene {
             }
         }
 
-        console.log(pathMap);
-
         return foundWords;
+    }
+
+    // TODO: add a supplementary dict withwords such as:
+    // TITS
+    async loadSpellCheck() {
+        const wordList = await fetch('assets/2of12.txt').then((response) =>
+            response.text()
+        );
+        const wordArr = wordList.split('\r\n');
+
+        return new Set(wordArr);
     }
 
     getTileNeighbors(row: number, col: number) {
