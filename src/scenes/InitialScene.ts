@@ -11,8 +11,9 @@ export default class InitialScene extends Phaser.Scene {
     currentChain: Tile[] = [];
 
     isDragging = false;
-    LETTER_SPRITE_SIZE!: number;
+    boardWords = new Set<string>();
 
+    LETTER_SPRITE_SIZE!: number;
     readonly GRID_SIZE = 4;
 
     constructor() {
@@ -24,6 +25,38 @@ export default class InitialScene extends Phaser.Scene {
     }
 
     create(): void {
+        const overlayGroup = this.add.group();
+        overlayGroup.add(
+            this.add
+                .rectangle(
+                    this.cameras.main.centerX,
+                    this.cameras.main.centerY,
+                    this.cameras.main.width,
+                    this.cameras.main.height,
+                    0xffffff,
+                    254 / 2
+                )
+                .on('pointerdown', (pointer: any, x: any, y: any, stop: any) =>
+                    // prevent click thru while overlay is up
+                    stop.stopPropagation()
+                )
+        );
+        const overlayButton = this.add
+            .rectangle(
+                this.cameras.main.centerX,
+                Math.floor(this.cameras.main.height * 0.75),
+                80,
+                30,
+                0xff0000
+            )
+            .on('pointerdown', () => {
+                console.log('button press');
+
+                overlayGroup.destroy(true, true);
+            });
+        overlayGroup.add(overlayButton);
+        overlayGroup.setDepth(100);
+
         const gameWidth = this.game.config.width;
         this.LETTER_SPRITE_SIZE =
             typeof gameWidth === 'string'
@@ -128,13 +161,19 @@ export default class InitialScene extends Phaser.Scene {
             .on('pointerover', () => this.endChain())
             .setDepth(-1);
 
+        // get all the words in the board
+        this.getWords(this.tileGrid).then((foundWords) => {
+            this.boardWords = foundWords;
+            overlayGroup
+                .getChildren()
+                .forEach((child) => child.setInteractive());
+            overlayButton.fillColor = 0x00ff00;
+        });
+
         if (DEBUG) {
             boardBox.setStrokeStyle(2, 0x00ff00);
             // eslint-disable-next-line no-console
             console.log(this.tileGrid);
-            this.getWords(this.tileGrid).then((foundWords) =>
-                console.log(foundWords)
-            );
         }
     }
 
