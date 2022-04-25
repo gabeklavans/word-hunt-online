@@ -81,15 +81,19 @@ export default class InitialScene extends Phaser.Scene {
                         this.LETTER_SPRITE_SIZE
                     )
                     .setName('image');
-                const tileContainer = this.add.container(
-                    this.cameras.main.width / 2 +
-                        (col - this.GRID_SIZE / 2) * this.LETTER_SPRITE_SIZE +
-                        this.LETTER_SPRITE_SIZE / 2,
-                    this.cameras.main.height / 2 +
-                        (row - this.GRID_SIZE / 2) * this.LETTER_SPRITE_SIZE +
-                        this.LETTER_SPRITE_SIZE / 2,
-                    image
-                );
+                const tileContainer = this.add
+                    .container(
+                        this.cameras.main.width / 2 +
+                            (col - this.GRID_SIZE / 2) *
+                                this.LETTER_SPRITE_SIZE +
+                            this.LETTER_SPRITE_SIZE / 2,
+                        this.cameras.main.height / 2 +
+                            (row - this.GRID_SIZE / 2) *
+                                this.LETTER_SPRITE_SIZE +
+                            this.LETTER_SPRITE_SIZE / 2,
+                        image
+                    )
+                    .setVisible(false);
                 this.tileGrid[row].push({
                     letter: letterGenerator.random(),
                     container: tileContainer,
@@ -97,6 +101,7 @@ export default class InitialScene extends Phaser.Scene {
                     col: col,
                 });
                 this.imageGroup.add(image);
+                this.tileContainerGroup.add(tileContainer);
             }
         }
 
@@ -164,10 +169,14 @@ export default class InitialScene extends Phaser.Scene {
         // get all the words in the board
         this.getWords(this.tileGrid).then((foundWords) => {
             this.boardWords = foundWords;
+            if (DEBUG) {
+                console.log(this.boardWords);
+            }
             overlayGroup
                 .getChildren()
                 .forEach((child) => child.setInteractive());
             overlayButton.fillColor = 0x00ff00;
+            this.tileContainerGroup.setVisible(true);
         });
 
         if (DEBUG) {
@@ -273,39 +282,39 @@ export default class InitialScene extends Phaser.Scene {
         const dictionary = await this.loadSpellCheck();
 
         // Tile -> map of strings
-        const pathMap = new Map<Tile, Map<string, Tile>>();
+        const pathMap = new Map<Tile, [string, Tile][]>();
         // init map for every tile with its letter as the string and itself origination tile
         for (const tile of this.tileGrid.flat()) {
             // strings -> origination Tiles
-            const letterMap = new Map();
-            letterMap.set(tile.letter, tile);
-            pathMap.set(tile, letterMap);
+            const letterTuple: [string, Tile][] = [];
+            letterTuple.push([tile.letter, tile]);
+            pathMap.set(tile, letterTuple);
         }
 
         for (let row = 0; row < this.GRID_SIZE; row++) {
             for (let col = 0; col < this.GRID_SIZE; col++) {
                 const tile = board[row][col];
-                const tileLetterMap = pathMap.get(tile);
-                if (tileLetterMap != null) {
+                const tileTuples = pathMap.get(tile);
+                if (tileTuples != null) {
                     const neighbors = this.getTileNeighbors(row, col);
                     for (const neighborTile of neighbors) {
-                        const neighborMap = pathMap.get(neighborTile);
-                        if (neighborMap != null) {
-                            for (const neighborMapEntry of neighborMap.entries()) {
+                        const neighborTuples = pathMap.get(neighborTile);
+                        if (neighborTuples != null) {
+                            for (const neighborMapEntry of neighborTuples) {
                                 // make sure not to add a cycle
                                 if (neighborMapEntry[1] !== tile) {
-                                    tileLetterMap.set(
+                                    tileTuples.push([
                                         neighborMapEntry[0] + tile.letter,
                                         // carry over the originator of the string to avoid cycles
-                                        neighborMapEntry[1]
-                                    );
+                                        neighborMapEntry[1],
+                                    ]);
                                 }
                             }
                         }
                     }
 
                     // this letter map won't change anymore, so add its words to the dict set
-                    for (const potentialWord of tileLetterMap.keys()) {
+                    for (const [potentialWord] of tileTuples) {
                         const potentialWordRev = potentialWord
                             .split('')
                             .reverse()
