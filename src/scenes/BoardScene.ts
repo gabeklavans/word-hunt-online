@@ -3,7 +3,7 @@ const letterGenerator = new TextFrequency();
 
 const DEBUG = true;
 
-export default class InitialScene extends Phaser.Scene {
+export default class BoardScene extends Phaser.Scene {
     imageGroup!: Phaser.GameObjects.Group;
     tileContainerGroup!: Phaser.GameObjects.Group;
     tileGrid: Tile[][] = [];
@@ -17,7 +17,7 @@ export default class InitialScene extends Phaser.Scene {
     readonly GRID_SIZE = 4;
 
     constructor() {
-        super('initial');
+        super({ key: 'board', visible: true });
 
         for (let i = 0; i < this.GRID_SIZE; i++) {
             this.tileGrid.push([]);
@@ -25,38 +25,6 @@ export default class InitialScene extends Phaser.Scene {
     }
 
     create(): void {
-        const overlayGroup = this.add.group();
-        overlayGroup.add(
-            this.add
-                .rectangle(
-                    this.cameras.main.centerX,
-                    this.cameras.main.centerY,
-                    this.cameras.main.width,
-                    this.cameras.main.height,
-                    0xffffff,
-                    254 / 2
-                )
-                .on('pointerdown', (pointer: any, x: any, y: any, stop: any) =>
-                    // prevent click thru while overlay is up
-                    stop.stopPropagation()
-                )
-        );
-        const overlayButton = this.add
-            .rectangle(
-                this.cameras.main.centerX,
-                Math.floor(this.cameras.main.height * 0.75),
-                80,
-                30,
-                0xff0000
-            )
-            .on('pointerdown', () => {
-                console.log('button press');
-
-                overlayGroup.destroy(true, true);
-            });
-        overlayGroup.add(overlayButton);
-        overlayGroup.setDepth(100);
-
         const gameWidth = this.game.config.width;
         this.LETTER_SPRITE_SIZE =
             typeof gameWidth === 'string'
@@ -65,6 +33,7 @@ export default class InitialScene extends Phaser.Scene {
         // listeners
         this.input.addListener('pointerup', () => {
             this.endChain();
+            console.log('pup');
         });
 
         // the rest
@@ -172,11 +141,11 @@ export default class InitialScene extends Phaser.Scene {
             if (DEBUG) {
                 console.log(this.boardWords);
             }
-            overlayGroup
-                .getChildren()
-                .forEach((child) => child.setInteractive());
-            overlayButton.fillColor = 0x00ff00;
-            this.tileContainerGroup.setVisible(true);
+            // overlayGroup
+            //     .getChildren()
+            //     .forEach((child) => child.setInteractive());
+            // overlayButton.fillColor = 0x00ff00;
+            // this.tileContainerGroup.setVisible(true);
         });
 
         if (DEBUG) {

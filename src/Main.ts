@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 
 import PreloaderScene from './scenes/PreloaderScene';
-import InitialScene from './scenes/InitialScene';
+import BoardScene from './scenes/BoardScene';
+import SplashScene from './scenes/SplashScene';
 
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
@@ -18,7 +19,7 @@ const config: Phaser.Types.Core.GameConfig = {
             gravity: { x: 0, y: 0 },
         },
     },
-    scene: [PreloaderScene, InitialScene],
+    scene: [PreloaderScene, SplashScene, BoardScene],
     // transparent: true,
     backgroundColor: '0xffffff',
 };

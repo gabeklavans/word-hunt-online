@@ -9,6 +9,6 @@ export default class Preloader extends Phaser.Scene {
     }
 
     create(): void {
-        this.scene.start('initial');
+        this.scene.start('splash');
     }
 }
