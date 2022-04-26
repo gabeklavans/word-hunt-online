@@ -42,37 +42,41 @@ export default class BoardScene extends Phaser.Scene {
             this.endChain();
         });
 
-        while (this.boardWords.size < 15) {
-            console.log('making new board...');
-            
-            // create all images and add to containers
+        this.generateGoodBoard().then(() => {
+            // tell splash screen we've got a valid board
+            eventsCenter.emit(WHOEvents.BoardDone);
+        });
+    }
+
+    async generateGoodBoard() {
+        while (this.boardWords.size < 30) {
+            if (DEBUG) {
+                console.log('generating new board...');
+            }
+
             for (let row = 0; row < this.GRID_SIZE; row++) {
                 for (let col = 0; col < this.GRID_SIZE; col++) {
-                    this.tileGrid[row].push({
+                    this.tileGrid[row][col] = {
                         letter: letterGenerator.random(),
                         row: row,
                         col: col,
-                    });
+                    };
                 }
             }
 
             // get all the words in the board
-            this.getWords(this.tileGrid).then((foundWords) => {
-                this.boardWords = foundWords;
-                if (DEBUG) {
-                    // eslint-disable-next-line no-console
-                    console.log(this.boardWords);
-                }
-            });
+            const foundWords = await this.getWords(this.tileGrid);
+            this.boardWords = foundWords;
+            if (DEBUG) {
+                // eslint-disable-next-line no-console
+                console.log(this.boardWords);
+            }
         }
 
         if (DEBUG) {
             // eslint-disable-next-line no-console
             console.log(this.tileGrid);
         }
-
-        // tell splash screen we've got a valid board
-        eventsCenter.emit(WHOEvents.BoardDone);
     }
 
     drawBoard() {

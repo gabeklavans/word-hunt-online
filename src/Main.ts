@@ -4,7 +4,7 @@ import PreloaderScene from './scenes/PreloaderScene';
 import BoardScene from './scenes/BoardScene';
 import SplashScene from './scenes/SplashScene';
 
-export const DEBUG = false;
+export const DEBUG = true;
 
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
