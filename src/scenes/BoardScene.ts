@@ -1,7 +1,7 @@
 import { TextFrequency } from 'correct-frequency-random-letters';
+import eventsCenter, { WHOEvents } from '../WHOEvents';
 const letterGenerator = new TextFrequency();
-
-const DEBUG = true;
+import { DEBUG } from '../Main';
 
 export default class BoardScene extends Phaser.Scene {
     imageGroup!: Phaser.GameObjects.Group;
@@ -17,7 +17,7 @@ export default class BoardScene extends Phaser.Scene {
     readonly GRID_SIZE = 4;
 
     constructor() {
-        super({ key: 'board', visible: true });
+        super({ key: 'board', visible: false });
 
         for (let i = 0; i < this.GRID_SIZE; i++) {
             this.tileGrid.push([]);
@@ -25,25 +25,60 @@ export default class BoardScene extends Phaser.Scene {
     }
 
     create(): void {
+        // events
+        eventsCenter.on(WHOEvents.GameStart, this.drawBoard, this);
+
+        // initialize variables
         const gameWidth = this.game.config.width;
         this.LETTER_SPRITE_SIZE =
             typeof gameWidth === 'string'
                 ? parseInt(gameWidth) / (this.GRID_SIZE + 1)
                 : gameWidth / (this.GRID_SIZE + 1);
-        // listeners
-        this.input.addListener('pointerup', () => {
-            this.endChain();
-            console.log('pup');
-        });
-
-        // the rest
         this.imageGroup = this.add.group();
         this.tileContainerGroup = this.add.group();
 
-        // create all images and add to containers
-        for (let row = 0; row < this.GRID_SIZE; row++) {
-            for (let col = 0; col < this.GRID_SIZE; col++) {
-                const image = this.add
+        // global intput listeners
+        this.input.addListener('pointerup', () => {
+            this.endChain();
+        });
+
+        while (this.boardWords.size < 15) {
+            console.log('making new board...');
+            
+            // create all images and add to containers
+            for (let row = 0; row < this.GRID_SIZE; row++) {
+                for (let col = 0; col < this.GRID_SIZE; col++) {
+                    this.tileGrid[row].push({
+                        letter: letterGenerator.random(),
+                        row: row,
+                        col: col,
+                    });
+                }
+            }
+
+            // get all the words in the board
+            this.getWords(this.tileGrid).then((foundWords) => {
+                this.boardWords = foundWords;
+                if (DEBUG) {
+                    // eslint-disable-next-line no-console
+                    console.log(this.boardWords);
+                }
+            });
+        }
+
+        if (DEBUG) {
+            // eslint-disable-next-line no-console
+            console.log(this.tileGrid);
+        }
+
+        // tell splash screen we've got a valid board
+        eventsCenter.emit(WHOEvents.BoardDone);
+    }
+
+    drawBoard() {
+        for (const tileRow of this.tileGrid) {
+            for (const tile of tileRow) {
+                const tileImage = this.add
                     .image(0, 0, 'acho')
                     .setDisplaySize(
                         this.LETTER_SPRITE_SIZE,
@@ -53,34 +88,20 @@ export default class BoardScene extends Phaser.Scene {
                 const tileContainer = this.add
                     .container(
                         this.cameras.main.width / 2 +
-                            (col - this.GRID_SIZE / 2) *
+                            (tile.col - this.GRID_SIZE / 2) *
                                 this.LETTER_SPRITE_SIZE +
                             this.LETTER_SPRITE_SIZE / 2,
                         this.cameras.main.height / 2 +
-                            (row - this.GRID_SIZE / 2) *
+                            (tile.row - this.GRID_SIZE / 2) *
                                 this.LETTER_SPRITE_SIZE +
                             this.LETTER_SPRITE_SIZE / 2,
-                        image
+                        tileImage
                     )
                     .setVisible(false);
-                this.tileGrid[row].push({
-                    letter: letterGenerator.random(),
-                    container: tileContainer,
-                    row: row,
-                    col: col,
-                });
-                this.imageGroup.add(image);
-                this.tileContainerGroup.add(tileContainer);
-            }
-        }
 
-        // set up containers
-        for (const tileRow of this.tileGrid) {
-            for (const tile of tileRow) {
-                const tileContainer = tile.container;
-                const tileImage = tileContainer.getByName(
-                    'image'
-                ) as Phaser.GameObjects.Image;
+                tile.container = tileContainer;
+                this.imageGroup.add(tileImage);
+                this.tileContainerGroup.add(tileContainer);
 
                 // enable interactions
                 tileContainer
@@ -111,48 +132,48 @@ export default class BoardScene extends Phaser.Scene {
                         })
                         .setOrigin(0.5)
                 );
+
+                tileContainer.setVisible(true);
             }
         }
 
         // add the board boundary
-        const boardBox = this.add
-            .rectangle(
-                this.tileGrid[0][0].container.getBounds().x,
-                this.tileGrid[0][0].container.getBounds().y,
-                this.LETTER_SPRITE_SIZE * this.GRID_SIZE,
-                this.LETTER_SPRITE_SIZE * this.GRID_SIZE
-            )
-            .setOrigin(0, 0)
-            .setInteractive(
-                new Phaser.Geom.Rectangle(
-                    this.tileGrid[0][0].container.getBounds().x,
-                    this.tileGrid[0][0].container.getBounds().y,
+        const topLeftContainer = this.tileGrid[0][0].container;
+        if (topLeftContainer) {
+            const boardBox = this.add
+                .rectangle(
+                    topLeftContainer.getBounds().x,
+                    topLeftContainer.getBounds().y,
                     this.LETTER_SPRITE_SIZE * this.GRID_SIZE,
                     this.LETTER_SPRITE_SIZE * this.GRID_SIZE
-                ),
-                this.pointExitRect
-            )
-            .on('pointerover', () => this.endChain())
-            .setDepth(-1);
+                )
+                .setOrigin(0, 0)
+                .setInteractive(
+                    new Phaser.Geom.Rectangle(
+                        topLeftContainer.getBounds().x,
+                        topLeftContainer.getBounds().y,
+                        this.LETTER_SPRITE_SIZE * this.GRID_SIZE,
+                        this.LETTER_SPRITE_SIZE * this.GRID_SIZE
+                    ),
+                    this.pointExitRect
+                )
+                .on('pointerover', () => this.endChain())
+                .setDepth(-1);
 
-        // get all the words in the board
-        this.getWords(this.tileGrid).then((foundWords) => {
-            this.boardWords = foundWords;
             if (DEBUG) {
-                console.log(this.boardWords);
+                boardBox.setStrokeStyle(2, 0x00ff00);
             }
-            // overlayGroup
-            //     .getChildren()
-            //     .forEach((child) => child.setInteractive());
-            // overlayButton.fillColor = 0x00ff00;
-            // this.tileContainerGroup.setVisible(true);
-        });
+        } else {
+            console.error('There was a timing issue...');
+            console.error(
+                'Bounding box tried to draw before top left container was defined'
+            );
 
-        if (DEBUG) {
-            boardBox.setStrokeStyle(2, 0x00ff00);
-            // eslint-disable-next-line no-console
-            console.log(this.tileGrid);
+            // TODO: Replace with an error scene
+            this.game.destroy(true, true);
         }
+
+        this.scene.setVisible(true);
     }
 
     pointExitRect(rect: Phaser.Geom.Rectangle, x: number, y: number) {
@@ -160,12 +181,18 @@ export default class BoardScene extends Phaser.Scene {
     }
 
     startChain(tile: Tile) {
-        const tileImage = tile.container.getByName(
+        const tileImage = tile.container?.getByName(
             'image'
         ) as Phaser.GameObjects.Image;
-        tileImage.setTint(0x00ff00);
-        this.currentChain.push(tile);
-        this.isDragging = true;
+        if (tileImage) {
+            tileImage.setTint(0x00ff00);
+            this.currentChain.push(tile);
+            this.isDragging = true;
+        } else {
+            console.error('Container not initialized');
+            // TODO: error scene
+            this.game.destroy(true, true);
+        }
     }
 
     handleAddToChain(tile: Tile) {
@@ -182,35 +209,41 @@ export default class BoardScene extends Phaser.Scene {
                         tile.col
                     ) > Math.sqrt(2)
                 ) {
-                    // skipped tiles detected!
-                    // draw a line and fill in the intersected tiles
-                    const intersectLine = new Phaser.Geom.Line(
-                        lastTileInChain.container.x,
-                        lastTileInChain.container.y,
-                        tile.container.x,
-                        tile.container.y
-                    );
+                    if (lastTileInChain.container && tile.container) {
+                        // skipped tiles detected!
+                        // draw a line and fill in the intersected tiles
+                        const intersectLine = new Phaser.Geom.Line(
+                            lastTileInChain.container.x,
+                            lastTileInChain.container.y,
+                            tile.container.x,
+                            tile.container.y
+                        );
 
-                    // loop thru all the tiles' hitboxes and check for intersect,
-                    // cause I can't figure out a better way to do it using Phaser...
-                    for (const childTile of this.tileGrid.flat()) {
-                        const childContainer =
-                            childTile.container as Phaser.GameObjects.Container;
-                        if (
-                            Phaser.Geom.Intersects.LineToCircle(
-                                intersectLine,
-                                new Phaser.Geom.Circle(
-                                    childContainer.x,
-                                    childContainer.y,
-                                    (
-                                        childContainer.input
-                                            .hitArea as Phaser.Geom.Circle
-                                    ).radius
+                        // loop thru all the tiles' hitboxes and check for intersect,
+                        // cause I can't figure out a better way to do it using Phaser...
+                        for (const childTile of this.tileGrid.flat()) {
+                            const childContainer =
+                                childTile.container as Phaser.GameObjects.Container;
+                            if (
+                                Phaser.Geom.Intersects.LineToCircle(
+                                    intersectLine,
+                                    new Phaser.Geom.Circle(
+                                        childContainer.x,
+                                        childContainer.y,
+                                        (
+                                            childContainer.input
+                                                .hitArea as Phaser.Geom.Circle
+                                        ).radius
+                                    )
                                 )
-                            )
-                        ) {
-                            this.addToChain(childTile);
+                            ) {
+                                this.addToChain(childTile);
+                            }
                         }
+                    } else {
+                        console.error('Containers not initialized');
+                        // TODO: Error scene
+                        this.game.destroy(true, true);
                     }
                 }
 
@@ -225,12 +258,18 @@ export default class BoardScene extends Phaser.Scene {
 
     addToChain(tile: Tile) {
         if (!this.currentChain.includes(tile)) {
-            const tileImage = tile.container.getByName(
+            const tileImage = tile.container?.getByName(
                 'image'
             ) as Phaser.GameObjects.Image;
-            tileImage.setTint(0xff0000);
+            if (tileImage) {
+                tileImage.setTint(0xff0000);
 
-            this.currentChain.push(tile);
+                this.currentChain.push(tile);
+            } else {
+                console.error('Container not initialized...');
+                // TODO: Error scene
+                this.game.destroy(true, true);
+            }
         }
     }
 
