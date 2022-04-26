@@ -13,6 +13,8 @@ export default class BoardScene extends Phaser.Scene {
     isDragging = false;
     boardWords = new Set<string>();
 
+    curScore = 0;
+
     LETTER_SPRITE_SIZE!: number;
     readonly GRID_SIZE = 4;
 
@@ -280,9 +282,39 @@ export default class BoardScene extends Phaser.Scene {
     endChain() {
         if (this.isDragging) {
             this.imageGroup.setTint(0xffffff);
+
+            const word = this.currentChain.map((tile) => tile.letter).join('');
+            if (this.boardWords.has(word)) {
+                const wordScore = this.getWordScore(word);
+                console.log(`word score: ${wordScore}`);
+                this.curScore += wordScore;
+            }
+
             this.currentChain = [];
         }
         this.isDragging = false;
+        console.log(`cur score: ${this.curScore}`);
+    }
+
+    getWordScore(word: string) {
+        let score = 0;
+        for (let i = 3; i <= word.length; i++) {
+            // trying to emulate what I'm seeing in the scores of word hunt
+            switch (i) {
+                case 3:
+                    score += 100;
+                    break;
+                case 4:
+                    score += 300;
+                    break;
+                case 6:
+                    score += 600;
+                    break;
+                default:
+                    score += 400;
+            }
+        }
+        return score;
     }
 
     /**
@@ -346,6 +378,10 @@ export default class BoardScene extends Phaser.Scene {
                     }
                 }
             }
+        }
+
+        if (DEBUG) {
+            console.log(pathMap);
         }
 
         return foundWords;
