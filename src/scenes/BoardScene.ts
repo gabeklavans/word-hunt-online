@@ -51,7 +51,7 @@ export default class BoardScene extends Phaser.Scene {
     }
 
     async generateGoodBoard() {
-        while (this.boardWords.size < 30) {
+        while (this.boardWords.size < 1) {
             if (DEBUG) {
                 console.log('generating new board...');
             }
@@ -67,8 +67,11 @@ export default class BoardScene extends Phaser.Scene {
             }
 
             // get all the words in the board
-            const foundWords = await this.getWords(this.tileGrid);
-            this.boardWords = foundWords;
+            // const foundWords = await this.getWordsTabulationBroken(
+            //     this.tileGrid
+            // );
+            // this.boardWords = foundWords;
+            await this.getWordsRecursion();
             if (DEBUG) {
                 // eslint-disable-next-line no-console
                 console.log(this.boardWords);
@@ -318,30 +321,111 @@ export default class BoardScene extends Phaser.Scene {
     }
 
     /**
+     * follows method at https://www.geeksforgeeks.org/boggle-find-possible-words-board-characters/?ref=lbp
+     */
+    async getWordsRecursion() {
+        this.boardWords = new Set();
+        const dict = await this.loadSpellCheck();
+        const memoizedStrings = new Map<Tile, Set<string>>();
+        for (const destTile of this.tileGrid.flat()) {
+            const foundWords = new Set<string>();
+            const stringSet = new Set<string>();
+            this.getWordsRecursionHelper(
+                destTile,
+                new Set<Tile>(),
+                '',
+                foundWords,
+                stringSet,
+                memoizedStrings,
+                dict
+            );
+            // memoizedStrings.set(destTile, stringSet);
+            console.log(`found for ${destTile.letter}:`);
+            console.log(foundWords);
+            foundWords.forEach((foundWord) => this.boardWords.add(foundWord));
+        }
+    }
+
+    getWordsRecursionHelper(
+        source: Tile,
+        visited: Set<Tile>,
+        word: string,
+        foundWords: Set<string>,
+        stringSet: Set<string>,
+        memoizedWords: Map<Tile, Set<string>>,
+        dict: Set<string>
+    ) {
+        visited.add(source);
+        word += source.letter;
+        // stringSet.add(word);
+        if (word.length >= 3 && dict.has(word.toLowerCase())) {
+            foundWords.add(word);
+        }
+
+        for (const neighbor of this.getTileNeighbors(source.row, source.col)) {
+            if (!visited.has(neighbor)) {
+                /*if (memoizedWords.has(neighbor)) {
+                    // all the strings at neighbor have been memoized, just tack in front of them
+                    for (const memdWord of memoizedWords.get(
+                        neighbor
+                    ) as Set<string>) {
+                        const potentialWord = source.letter + memdWord;
+                        stringSet.add(potentialWord);
+                        if (dict.has(potentialWord)) {
+                            foundWords.add(potentialWord);
+                        }
+                    }
+                    visited.add(neighbor);
+                } else {*/
+                this.getWordsRecursionHelper(
+                    neighbor,
+                    visited,
+                    word,
+                    foundWords,
+                    stringSet,
+                    memoizedWords,
+                    dict
+                );
+                // }
+            }
+        }
+
+        word = word[word.length - 1];
+        visited.delete(source);
+    }
+
+    /**
      * Get all words in board using (inefficient) \~tabulation\~ (NOT recursion)
      * @param board The 2D array of all tiles in the board
      */
-    async getWords(board: Tile[][]) {
+    async getWordsTabulationBroken(board: Tile[][]) {
         const foundWords = new Set<string>();
         const dictionary = await this.loadSpellCheck();
 
-        // Tile -> map of strings
-        const pathMap = new Map<Tile, [string, Tile][]>();
-        // init map for every tile with its letter as the string and itself origination tile
-        for (const tile of this.tileGrid.flat()) {
-            // strings -> origination Tiles
-            const letterTuple: [string, Tile][] = [];
-            letterTuple.push([tile.letter, tile]);
-            pathMap.set(tile, letterTuple);
-        }
+        for (
+            let offsetIdx = 0;
+            offsetIdx < this.GRID_SIZE * this.GRID_SIZE;
+            offsetIdx++
+        ) {
+            // Tile -> map of strings
+            const pathMap = new Map<Tile, [string, Tile][]>();
+            // init map for every tile with its letter as the string and itself origination tile
+            for (const tile of board.flat()) {
+                // strings -> origination Tiles
+                const letterTuple: [string, Tile][] = [];
+                letterTuple.push([tile.letter, tile]);
+                pathMap.set(tile, letterTuple);
+            }
 
-        for (let row = 0; row < this.GRID_SIZE; row++) {
-            for (let col = 0; col < this.GRID_SIZE; col++) {
-                const tile = board[row][col];
+            for (let i = 0; i < this.GRID_SIZE * this.GRID_SIZE; i++) {
+                const tile =
+                    board.flat()[i % (this.GRID_SIZE * this.GRID_SIZE)];
                 const tileTuples = pathMap.get(tile);
                 if (tileTuples != null) {
-                    const neighbors = this.getTileNeighbors(row, col);
-                    for (const neighborTile of neighbors) {
+                    for (const neighborTile of this.getTileNeighbors(
+                        tile.row,
+                        tile.col
+                    )) {
                         const neighborTuples = pathMap.get(neighborTile);
                         if (neighborTuples != null) {
                             for (const neighborMapEntry of neighborTuples) {
@@ -380,9 +464,9 @@ export default class BoardScene extends Phaser.Scene {
             }
         }
 
-        if (DEBUG) {
-            console.log(pathMap);
-        }
+        // if (DEBUG) {
+        //     console.log(pathMap);
+        // }
 
         return foundWords;
     }
@@ -400,8 +484,8 @@ export default class BoardScene extends Phaser.Scene {
 
     getTileNeighbors(row: number, col: number) {
         const neighbors: Tile[] = [];
-        for (let rowOffset = -1; rowOffset < 2; rowOffset++) {
-            for (let colOffset = -1; colOffset < 2; colOffset++) {
+        for (let rowOffset = -1; rowOffset <= 1; rowOffset++) {
+            for (let colOffset = -1; colOffset <= 1; colOffset++) {
                 // don't add self as neighbor
                 if (!(rowOffset == 0 && colOffset == 0)) {
                     const neighborRow = row + rowOffset;
