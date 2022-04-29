@@ -326,20 +326,15 @@ export default class BoardScene extends Phaser.Scene {
     async getWordsRecursion() {
         this.boardWords = new Set();
         const dict = await this.loadSpellCheck();
-        const memoizedStrings = new Map<Tile, Set<string>>();
         for (const destTile of this.tileGrid.flat()) {
             const foundWords = new Set<string>();
-            const stringSet = new Set<string>();
             this.getWordsRecursionHelper(
                 destTile,
                 new Set<Tile>(),
                 '',
                 foundWords,
-                stringSet,
-                memoizedStrings,
                 dict
             );
-            // memoizedStrings.set(destTile, stringSet);
             console.log(`found for ${destTile.letter}:`);
             console.log(foundWords);
             foundWords.forEach((foundWord) => this.boardWords.add(foundWord));
@@ -351,42 +346,23 @@ export default class BoardScene extends Phaser.Scene {
         visited: Set<Tile>,
         word: string,
         foundWords: Set<string>,
-        stringSet: Set<string>,
-        memoizedWords: Map<Tile, Set<string>>,
         dict: Set<string>
     ) {
         visited.add(source);
         word += source.letter;
-        // stringSet.add(word);
         if (word.length >= 3 && dict.has(word.toLowerCase())) {
             foundWords.add(word);
         }
 
         for (const neighbor of this.getTileNeighbors(source.row, source.col)) {
             if (!visited.has(neighbor)) {
-                /*if (memoizedWords.has(neighbor)) {
-                    // all the strings at neighbor have been memoized, just tack in front of them
-                    for (const memdWord of memoizedWords.get(
-                        neighbor
-                    ) as Set<string>) {
-                        const potentialWord = source.letter + memdWord;
-                        stringSet.add(potentialWord);
-                        if (dict.has(potentialWord)) {
-                            foundWords.add(potentialWord);
-                        }
-                    }
-                    visited.add(neighbor);
-                } else {*/
                 this.getWordsRecursionHelper(
                     neighbor,
                     visited,
                     word,
                     foundWords,
-                    stringSet,
-                    memoizedWords,
                     dict
                 );
-                // }
             }
         }
 
