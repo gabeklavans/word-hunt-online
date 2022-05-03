@@ -1,15 +1,15 @@
 /* eslint-disable no-undef */
 module.exports = {
     mount: {
-        public: '/',
-        src: '/dist',
+        public: "/",
+        src: "/dist",
     },
     devOptions: {
         port: 8081,
-        open: 'none',
+        open: "none",
     },
     buildOptions: {
-        out: '_build',
+        out: "_build",
     },
     optimize: {
         bundle: true,

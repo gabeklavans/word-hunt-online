@@ -1,11 +1,15 @@
-import eventsCenter, { WHOEvents } from '../WHOEvents';
+import eventsCenter, { WHOEvents } from "../WHOEvents";
 
 export default class SplashScene extends Phaser.Scene {
+    boardDone = false;
+    badButtonColor = 0xff0000;
+    goodButtonColor = 0x00ff00;
+
     overlayButton!: Phaser.GameObjects.Rectangle;
     overlayGroup!: Phaser.GameObjects.Group;
 
     constructor() {
-        super({ key: 'splash' });
+        super({ key: "splash" });
     }
 
     create() {
@@ -19,7 +23,7 @@ export default class SplashScene extends Phaser.Scene {
                 this.cameras.main.width,
                 this.cameras.main.height,
                 0xffffff,
-                254 / 2
+                Math.floor(255 * 0.2)
             )
         );
         this.overlayButton = this.add
@@ -28,13 +32,13 @@ export default class SplashScene extends Phaser.Scene {
                 Math.floor(this.cameras.main.height * 0.75),
                 80,
                 30,
-                0xff0000
+                this.badButtonColor
             )
-            .on('pointerdown', this.startButtonHandler, this);
+            .on("pointerdown", this.startButtonHandler, this);
         this.overlayGroup.add(this.overlayButton);
         this.overlayGroup.setDepth(100);
 
-        this.scene.launch('board');
+        this.scene.launch("board");
     }
 
     startButtonHandler() {
@@ -43,9 +47,14 @@ export default class SplashScene extends Phaser.Scene {
     }
 
     boardDoneHandler() {
-        this.overlayGroup
-            .getChildren()
-            .forEach((child) => child.setInteractive());
-        this.overlayButton.fillColor = 0x00ff00;
+        if (this.overlayGroup) {
+            this.overlayGroup
+                .getChildren()
+                .forEach((child) => child.setInteractive());
+        }
+        if (this.overlayButton) {
+            this.overlayButton.fillColor = this.goodButtonColor;
+        }
+        this.boardDone = true;
     }
 }

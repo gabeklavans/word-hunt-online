@@ -1,8 +1,8 @@
-import Phaser from 'phaser';
+import Phaser from "phaser";
 
-import PreloaderScene from './scenes/PreloaderScene';
-import BoardScene from './scenes/BoardScene';
-import SplashScene from './scenes/SplashScene';
+import PreloaderScene from "./scenes/PreloaderScene";
+import BoardScene from "./scenes/BoardScene";
+import SplashScene from "./scenes/SplashScene";
 
 export const DEBUG = true;
 
@@ -16,14 +16,14 @@ const config: Phaser.Types.Core.GameConfig = {
         height: 800,
     },
     physics: {
-        default: 'arcade',
+        default: "arcade",
         arcade: {
             gravity: { x: 0, y: 0 },
         },
     },
-    scene: [PreloaderScene, SplashScene, BoardScene],
+    scene: [PreloaderScene, BoardScene, SplashScene],
     // transparent: true,
-    backgroundColor: '0xffffff',
+    backgroundColor: "0xffffff",
 };
 
 export default new Phaser.Game(config);

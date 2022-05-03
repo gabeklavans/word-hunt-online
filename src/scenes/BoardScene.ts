@@ -1,7 +1,5 @@
-import { TextFrequency } from 'correct-frequency-random-letters';
-import eventsCenter, { WHOEvents } from '../WHOEvents';
-const letterGenerator = new TextFrequency();
-import { DEBUG } from '../Main';
+import eventsCenter, { WHOEvents } from "../WHOEvents";
+import { DEBUG } from "../Main";
 
 export default class BoardScene extends Phaser.Scene {
     imageGroup!: Phaser.GameObjects.Group;
@@ -19,96 +17,94 @@ export default class BoardScene extends Phaser.Scene {
     readonly GRID_SIZE = 4;
 
     constructor() {
-        super({ key: 'board', visible: false });
+        super({ key: "board", visible: false });
 
         for (let i = 0; i < this.GRID_SIZE; i++) {
             this.tileGrid.push([]);
         }
     }
 
-    create(): void {
+    async create() {
         // events
-        eventsCenter.on(WHOEvents.GameStart, this.drawBoard, this);
+        eventsCenter.on(WHOEvents.GameStart, this.handleGameStart, this);
 
         // initialize variables
         const gameWidth = this.game.config.width;
         this.LETTER_SPRITE_SIZE =
-            typeof gameWidth === 'string'
+            typeof gameWidth === "string"
                 ? parseInt(gameWidth) / (this.GRID_SIZE + 1)
                 : gameWidth / (this.GRID_SIZE + 1);
         this.imageGroup = this.add.group();
         this.tileContainerGroup = this.add.group();
 
         // global intput listeners
-        this.input.addListener('pointerup', () => {
+        this.input.addListener("pointerup", () => {
             this.endChain();
         });
 
-        this.generateGoodBoard().then(() => {
-            // tell splash screen we've got a valid board
-            eventsCenter.emit(WHOEvents.BoardDone);
+        // get a board from API
+        const response = await fetch("http://localhost:3000/board", {
+            method: "GET",
         });
-    }
-
-    async generateGoodBoard() {
-        while (this.boardWords.size < 1) {
-            if (DEBUG) {
-                console.log('generating new board...');
-            }
-
-            for (let row = 0; row < this.GRID_SIZE; row++) {
-                for (let col = 0; col < this.GRID_SIZE; col++) {
-                    this.tileGrid[row][col] = {
-                        letter: letterGenerator.random(),
-                        row: row,
-                        col: col,
-                    };
-                }
-            }
-
-            // get all the words in the board
-            // const foundWords = await this.getWordsTabulationBroken(
-            //     this.tileGrid
-            // );
-            // this.boardWords = foundWords;
-            await this.getWordsRecursion();
-            if (DEBUG) {
-                // eslint-disable-next-line no-console
-                console.log(this.boardWords);
-            }
-        }
-
+        const boardData: BoardData = await response.json();
         if (DEBUG) {
-            // eslint-disable-next-line no-console
-            console.log(this.tileGrid);
+            console.log("Board data:");
+            console.log(boardData);
         }
+        this.boardWords = new Set<string>(boardData.words);
+        this.drawBoard(boardData.board);
+
+        // tell splash screen we've got a valid board
+        eventsCenter.emit(WHOEvents.BoardDone);
     }
 
-    drawBoard() {
-        for (const tileRow of this.tileGrid) {
-            for (const tile of tileRow) {
+    handleGameStart() {
+        console.log("timer start!!!");
+    }
+
+    drawBoard(board: BoardLetters) {
+        for (let row = 0; row < this.GRID_SIZE; row++) {
+            for (let col = 0; col < this.GRID_SIZE; col++) {
                 const tileImage = this.add
-                    .image(0, 0, 'acho')
+                    .image(0, 0, "acho")
                     .setDisplaySize(
                         this.LETTER_SPRITE_SIZE,
                         this.LETTER_SPRITE_SIZE
                     )
-                    .setName('image');
+                    .setName("image");
                 const tileContainer = this.add
                     .container(
                         this.cameras.main.width / 2 +
-                            (tile.col - this.GRID_SIZE / 2) *
+                            (col - this.GRID_SIZE / 2) *
                                 this.LETTER_SPRITE_SIZE +
                             this.LETTER_SPRITE_SIZE / 2,
                         this.cameras.main.height / 2 +
-                            (tile.row - this.GRID_SIZE / 2) *
+                            (row - this.GRID_SIZE / 2) *
                                 this.LETTER_SPRITE_SIZE +
                             this.LETTER_SPRITE_SIZE / 2,
                         tileImage
                     )
                     .setVisible(false);
 
-                tile.container = tileContainer;
+                const tile: Tile = {
+                    letter: board[row * this.GRID_SIZE + col],
+                    container: tileContainer,
+                    row,
+                    col,
+                };
+
+                // draw on letters
+                tileContainer.add(
+                    this.add
+                        .text(0, 0, tile.letter.toUpperCase(), {
+                            color: "black",
+                            fontSize: `${this.LETTER_SPRITE_SIZE / 2}px`,
+                        })
+                        .setOrigin(0.5)
+                );
+
+                // add to structs
+                this.tileGrid[row][col] = tile;
                 this.imageGroup.add(tileImage);
                 this.tileContainerGroup.add(tileContainer);
 
@@ -122,25 +118,16 @@ export default class BoardScene extends Phaser.Scene {
                         ),
                         Phaser.Geom.Circle.Contains
                     )
-                    .on('pointerover', () => {
+                    .on("pointerover", () => {
                         this.handleAddToChain(tile);
                     })
-                    .on('pointerdown', () => {
+                    .on("pointerdown", () => {
                         this.startChain(tile);
                     });
 
                 if (DEBUG) {
                     this.input.enableDebug(tileContainer, 0x0000ff);
                 }
-                // draw on letters
-                tileContainer.add(
-                    this.add
-                        .text(0, 0, tile.letter.toUpperCase(), {
-                            color: 'black',
-                            fontSize: `${this.LETTER_SPRITE_SIZE / 2}px`,
-                        })
-                        .setOrigin(0.5)
-                );
 
                 tileContainer.setVisible(true);
             }
@@ -166,16 +153,16 @@ export default class BoardScene extends Phaser.Scene {
                     ),
                     this.pointExitRect
                 )
-                .on('pointerover', () => this.endChain())
+                .on("pointerover", () => this.endChain())
                 .setDepth(-1);
 
             if (DEBUG) {
                 boardBox.setStrokeStyle(2, 0x00ff00);
             }
         } else {
-            console.error('There was a timing issue...');
+            console.error("There was a timing issue...");
             console.error(
-                'Bounding box tried to draw before top left container was defined'
+                "Bounding box tried to draw before top left container was defined"
             );
 
             // TODO: Replace with an error scene
@@ -191,14 +178,14 @@ export default class BoardScene extends Phaser.Scene {
 
     startChain(tile: Tile) {
         const tileImage = tile.container?.getByName(
-            'image'
+            "image"
         ) as Phaser.GameObjects.Image;
         if (tileImage) {
             tileImage.setTint(0x00ff00);
             this.currentChain.push(tile);
             this.isDragging = true;
         } else {
-            console.error('Container not initialized');
+            console.error("Container not initialized");
             // TODO: error scene
             this.game.destroy(true, true);
         }
@@ -250,7 +237,7 @@ export default class BoardScene extends Phaser.Scene {
                             }
                         }
                     } else {
-                        console.error('Containers not initialized');
+                        console.error("Containers not initialized");
                         // TODO: Error scene
                         this.game.destroy(true, true);
                     }
@@ -268,14 +255,14 @@ export default class BoardScene extends Phaser.Scene {
     addToChain(tile: Tile) {
         if (!this.currentChain.includes(tile)) {
             const tileImage = tile.container?.getByName(
-                'image'
+                "image"
             ) as Phaser.GameObjects.Image;
             if (tileImage) {
                 tileImage.setTint(0xff0000);
 
                 this.currentChain.push(tile);
             } else {
-                console.error('Container not initialized...');
+                console.error("Container not initialized...");
                 // TODO: Error scene
                 this.game.destroy(true, true);
             }
@@ -286,7 +273,7 @@ export default class BoardScene extends Phaser.Scene {
         if (this.isDragging) {
             this.imageGroup.setTint(0xffffff);
 
-            const word = this.currentChain.map((tile) => tile.letter).join('');
+            const word = this.currentChain.map((tile) => tile.letter).join("");
             if (this.boardWords.has(word)) {
                 const wordScore = this.getWordScore(word);
                 console.log(`word score: ${wordScore}`);
@@ -318,166 +305,5 @@ export default class BoardScene extends Phaser.Scene {
             }
         }
         return score;
-    }
-
-    /**
-     * follows method at https://www.geeksforgeeks.org/boggle-find-possible-words-board-characters/?ref=lbp
-     */
-    async getWordsRecursion() {
-        this.boardWords = new Set();
-        const dict = await this.loadSpellCheck();
-        for (const destTile of this.tileGrid.flat()) {
-            const foundWords = new Set<string>();
-            this.getWordsRecursionHelper(
-                destTile,
-                new Set<Tile>(),
-                '',
-                foundWords,
-                dict
-            );
-            console.log(`found for ${destTile.letter}:`);
-            console.log(foundWords);
-            foundWords.forEach((foundWord) => this.boardWords.add(foundWord));
-        }
-    }
-
-    getWordsRecursionHelper(
-        source: Tile,
-        visited: Set<Tile>,
-        word: string,
-        foundWords: Set<string>,
-        dict: Set<string>
-    ) {
-        visited.add(source);
-        word += source.letter;
-        if (word.length >= 3 && dict.has(word.toLowerCase())) {
-            foundWords.add(word);
-        }
-
-        for (const neighbor of this.getTileNeighbors(source.row, source.col)) {
-            if (!visited.has(neighbor)) {
-                this.getWordsRecursionHelper(
-                    neighbor,
-                    visited,
-                    word,
-                    foundWords,
-                    dict
-                );
-            }
-        }
-
-        word = word[word.length - 1];
-        visited.delete(source);
-    }
-
-    /**
-     * Get all words in board using (inefficient) \~tabulation\~ (NOT recursion)
-     * @param board The 2D array of all tiles in the board
-     */
-    async getWordsTabulationBroken(board: Tile[][]) {
-        const foundWords = new Set<string>();
-        const dictionary = await this.loadSpellCheck();
-
-        for (
-            let offsetIdx = 0;
-            offsetIdx < this.GRID_SIZE * this.GRID_SIZE;
-            offsetIdx++
-        ) {
-            // Tile -> map of strings
-            const pathMap = new Map<Tile, [string, Tile][]>();
-            // init map for every tile with its letter as the string and itself origination tile
-            for (const tile of board.flat()) {
-                // strings -> origination Tiles
-                const letterTuple: [string, Tile][] = [];
-                letterTuple.push([tile.letter, tile]);
-                pathMap.set(tile, letterTuple);
-            }
-
-            for (let i = 0; i < this.GRID_SIZE * this.GRID_SIZE; i++) {
-                const tile =
-                    board.flat()[i % (this.GRID_SIZE * this.GRID_SIZE)];
-                const tileTuples = pathMap.get(tile);
-                if (tileTuples != null) {
-                    for (const neighborTile of this.getTileNeighbors(
-                        tile.row,
-                        tile.col
-                    )) {
-                        const neighborTuples = pathMap.get(neighborTile);
-                        if (neighborTuples != null) {
-                            for (const neighborMapEntry of neighborTuples) {
-                                // make sure not to add a cycle
-                                if (neighborMapEntry[1] !== tile) {
-                                    tileTuples.push([
-                                        neighborMapEntry[0] + tile.letter,
-                                        // carry over the originator of the string to avoid cycles
-                                        neighborMapEntry[1],
-                                    ]);
-                                }
-                            }
-                        }
-                    }
-
-                    // this letter map won't change anymore, so add its words to the dict set
-                    for (const [potentialWord] of tileTuples) {
-                        const potentialWordRev = potentialWord
-                            .split('')
-                            .reverse()
-                            .join('');
-                        if (
-                            potentialWord.length >= 3 &&
-                            dictionary.has(potentialWord.toLowerCase())
-                        ) {
-                            foundWords.add(potentialWord);
-                        }
-                        if (
-                            potentialWordRev.length >= 3 &&
-                            dictionary.has(potentialWordRev.toLowerCase())
-                        ) {
-                            foundWords.add(potentialWordRev);
-                        }
-                    }
-                }
-            }
-        }
-
-        // if (DEBUG) {
-        //     console.log(pathMap);
-        // }
-
-        return foundWords;
-    }
-
-    // TODO: add a supplementary dict withwords such as:
-    // TITS
-    async loadSpellCheck() {
-        const wordList = await fetch('assets/2of12.txt').then((response) =>
-            response.text()
-        );
-        const wordArr = wordList.split('\r\n');
-
-        return new Set(wordArr);
-    }
-
-    getTileNeighbors(row: number, col: number) {
-        const neighbors: Tile[] = [];
-        for (let rowOffset = -1; rowOffset <= 1; rowOffset++) {
-            for (let colOffset = -1; colOffset <= 1; colOffset++) {
-                // don't add self as neighbor
-                if (!(rowOffset == 0 && colOffset == 0)) {
-                    const neighborRow = row + rowOffset;
-                    const neighborCol = col + colOffset;
-                    if (
-                        neighborRow >= 0 &&
-                        neighborRow < this.GRID_SIZE &&
-                        neighborCol >= 0 &&
-                        neighborCol < this.GRID_SIZE
-                    ) {
-                        neighbors.push(this.tileGrid[neighborRow][neighborCol]);
-                    }
-                }
-            }
-        }
-
-        return neighbors;
     }
 }

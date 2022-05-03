@@ -1,12 +1,12 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "moduleResolution": "node",
-    "noEmit": true,
-    "allowJs": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true
-  },
-  "include": ["./src/**/*"]
+    "compilerOptions": {
+        "target": "ESNext",
+        "moduleResolution": "node",
+        "noEmit": true,
+        "allowJs": true,
+        "allowSyntheticDefaultImports": true,
+        "strict": true,
+        "forceConsistentCasingInFileNames": true
+    },
+    "include": ["./src/**/*"]
 }
