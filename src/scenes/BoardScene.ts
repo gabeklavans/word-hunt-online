@@ -4,6 +4,8 @@ import { DEBUG } from "../Main";
 export default class BoardScene extends Phaser.Scene {
     imageGroup!: Phaser.GameObjects.Group;
     tileContainerGroup!: Phaser.GameObjects.Group;
+    gameTimeText!: Phaser.GameObjects.Text;
+    gameTimer?: Phaser.Time.TimerEvent;
     tileGrid: Tile[][] = [];
 
     currentChain: Tile[] = [];
@@ -15,6 +17,7 @@ export default class BoardScene extends Phaser.Scene {
 
     LETTER_SPRITE_SIZE!: number;
     readonly GRID_SIZE = 4;
+    readonly GAME_TIME_SECS = 5;
 
     constructor() {
         super({ key: "board", visible: false });
@@ -52,14 +55,40 @@ export default class BoardScene extends Phaser.Scene {
             console.log(boardData);
         }
         this.boardWords = new Set<string>(boardData.words);
+
+        // draw objects
         this.drawBoard(boardData.board);
+        this.gameTimeText = this.add
+            .text(this.cameras.main.centerX, 20, "Time remaining:", {
+                color: "black",
+            })
+            .setOrigin(0.5)
+            .setVisible(false);
 
         // tell splash screen we've got a valid board
         eventsCenter.emit(WHOEvents.BoardDone);
     }
 
+    update(): void {
+        if (this.gameTimer && this.gameTimeText.visible) {
+            this.gameTimeText.setText(
+                `Time remaining: ${
+                    Math.ceil(this.gameTimer.getRemainingSeconds())
+                } seconds`
+            );
+        }
+    }
+
     handleGameStart() {
-        console.log("timer start!!!");
+        this.gameTimeText.setVisible(true);
+        this.gameTimer = this.time.delayedCall(
+            this.GAME_TIME_SECS * 1000,
+            () => {
+                console.log("Game over!");
+            },
+            [],
+            this
+        );
     }
 
     drawBoard(board: BoardLetters) {
