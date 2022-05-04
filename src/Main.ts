@@ -9,7 +9,7 @@ export const DEBUG = true;
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
     scale: {
-        mode: Phaser.Scale.RESIZE,
+        mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
         autoRound: true,
         width: 800,

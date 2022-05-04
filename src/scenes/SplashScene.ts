@@ -30,8 +30,8 @@ export default class SplashScene extends Phaser.Scene {
             .rectangle(
                 this.cameras.main.centerX,
                 Math.floor(this.cameras.main.height * 0.75),
-                80,
-                30,
+                this.cameras.main.width * 0.3,
+                this.cameras.main.height * 0.1,
                 this.badButtonColor
             )
             .on("pointerdown", this.startButtonHandler, this);

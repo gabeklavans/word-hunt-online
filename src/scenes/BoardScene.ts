@@ -9,6 +9,7 @@ export default class BoardScene extends Phaser.Scene {
     tileGrid: Tile[][] = [];
 
     currentChain: Tile[] = [];
+    foundWords: Set<string> = new Set();
 
     isDragging = false;
     boardWords = new Set<string>();
@@ -46,7 +47,7 @@ export default class BoardScene extends Phaser.Scene {
         });
 
         // get a board from API
-        const response = await fetch("http://localhost:3000/board", {
+        const response = await fetch("http://192.168.0.42:3000/board", {
             method: "GET",
         });
         const boardData: BoardData = await response.json();
@@ -58,10 +59,20 @@ export default class BoardScene extends Phaser.Scene {
 
         // draw objects
         this.drawBoard(boardData.board);
+        console.log(this.tileGrid[0][0].container?.getBounds().y);
+
         this.gameTimeText = this.add
-            .text(this.cameras.main.centerX, 20, "Time remaining:", {
-                color: "black",
-            })
+            .text(
+                this.cameras.main.centerX,
+                (this.tileGrid[0][0].container?.getBounds().y ?? 80) / 2,
+                "Time remaining:",
+                {
+                    color: "black",
+                    fontSize: `${Math.floor(
+                        (this.tileGrid[0][0].container?.getBounds().y ?? 80) / 2
+                    )}px`,
+                }
+            )
             .setOrigin(0.5)
             .setVisible(false);
 
@@ -72,9 +83,9 @@ export default class BoardScene extends Phaser.Scene {
     update(): void {
         if (this.gameTimer && this.gameTimeText.visible) {
             this.gameTimeText.setText(
-                `Time remaining: ${
-                    Math.ceil(this.gameTimer.getRemainingSeconds())
-                } seconds`
+                `Time remaining: ${Math.ceil(
+                    this.gameTimer.getRemainingSeconds()
+                )} seconds`
             );
         }
     }
@@ -83,12 +94,24 @@ export default class BoardScene extends Phaser.Scene {
         this.gameTimeText.setVisible(true);
         this.gameTimer = this.time.delayedCall(
             this.GAME_TIME_SECS * 1000,
-            () => {
-                console.log("Game over!");
-            },
+            this.handleGameEnd,
             [],
             this
         );
+    }
+
+    handleGameEnd() {
+        if (DEBUG) {
+            console.log("Game over!");
+        }
+        fetch("http://192.168.0.42:3000/result", {
+            method: "POST",
+            body: JSON.stringify({
+                score: this.curScore,
+                words: Array.from(this.foundWords),
+            }),
+        });
+        this.scene.switch("splash");
     }
 
     drawBoard(board: BoardLetters) {
@@ -303,10 +326,19 @@ export default class BoardScene extends Phaser.Scene {
             this.imageGroup.setTint(0xffffff);
 
             const word = this.currentChain.map((tile) => tile.letter).join("");
-            if (this.boardWords.has(word)) {
-                const wordScore = this.getWordScore(word);
-                console.log(`word score: ${wordScore}`);
-                this.curScore += wordScore;
+            if (!this.foundWords.has(word)) {
+                if (this.boardWords.has(word)) {
+                    const wordScore = this.getWordScore(word);
+                    if (DEBUG) {
+                        console.log(
+                            `Found word "${word}" of score: ${wordScore}`
+                        );
+                    }
+                    this.curScore += wordScore;
+                    this.foundWords.add(word);
+                }
+            } else {
+                // TODO: do some already found effect on the chain
             }
 
             this.currentChain = [];
