@@ -18,7 +18,11 @@ export default class BoardScene extends Phaser.Scene {
 
     LETTER_SPRITE_SIZE!: number;
     readonly GRID_SIZE = 4;
-    readonly GAME_TIME_SECS = 5;
+    readonly GAME_TIME_SECS = 60;
+    readonly DRAG_COLOR = 0xffffff;
+    readonly VALID_COLOR = 0x00ff00;
+    readonly REPEAT_COLOR = 0xfcd303;
+    readonly IDLE_COLOR = 0xad5100;
 
     constructor() {
         super({ key: "board", visible: false });
@@ -76,6 +80,8 @@ export default class BoardScene extends Phaser.Scene {
             .setOrigin(0.5)
             .setVisible(false);
 
+        this.imageGroup.setTint(this.IDLE_COLOR);
+
         // tell splash screen we've got a valid board
         eventsCenter.emit(WHOEvents.BoardDone);
     }
@@ -88,6 +94,14 @@ export default class BoardScene extends Phaser.Scene {
                 )} seconds`
             );
         }
+    }
+
+    updateChainColors(color: number) {
+        this.currentChain.forEach((tile) =>
+            (
+                tile.container?.getByName("image") as Phaser.GameObjects.Image
+            ).setTint(color)
+        );
     }
 
     handleGameStart() {
@@ -229,18 +243,8 @@ export default class BoardScene extends Phaser.Scene {
     }
 
     startChain(tile: Tile) {
-        const tileImage = tile.container?.getByName(
-            "image"
-        ) as Phaser.GameObjects.Image;
-        if (tileImage) {
-            tileImage.setTint(0x00ff00);
-            this.currentChain.push(tile);
-            this.isDragging = true;
-        } else {
-            console.error("Container not initialized");
-            // TODO: error scene
-            this.game.destroy(true, true);
-        }
+        this.isDragging = true;
+        this.handleAddToChain(tile);
     }
 
     handleAddToChain(tile: Tile) {
@@ -248,8 +252,11 @@ export default class BoardScene extends Phaser.Scene {
             if (!this.currentChain.includes(tile)) {
                 // check for skipped tiles and fill them in for the player
                 const lastTileInChain =
-                    this.currentChain[this.currentChain.length - 1];
+                    this.currentChain.length > 0
+                        ? this.currentChain[this.currentChain.length - 1]
+                        : undefined;
                 if (
+                    lastTileInChain &&
                     Phaser.Math.Distance.Between(
                         lastTileInChain.row,
                         lastTileInChain.col,
@@ -306,24 +313,22 @@ export default class BoardScene extends Phaser.Scene {
 
     addToChain(tile: Tile) {
         if (!this.currentChain.includes(tile)) {
-            const tileImage = tile.container?.getByName(
-                "image"
-            ) as Phaser.GameObjects.Image;
-            if (tileImage) {
-                tileImage.setTint(0xff0000);
+            this.currentChain.push(tile);
 
-                this.currentChain.push(tile);
+            const word = this.currentChain.map((tile) => tile.letter).join("");
+            if (this.foundWords.has(word)) {
+                this.updateChainColors(this.REPEAT_COLOR);
+            } else if (this.boardWords.has(word)) {
+                this.updateChainColors(this.VALID_COLOR);
             } else {
-                console.error("Container not initialized...");
-                // TODO: Error scene
-                this.game.destroy(true, true);
+                this.updateChainColors(this.DRAG_COLOR);
             }
         }
     }
 
     endChain() {
         if (this.isDragging) {
-            this.imageGroup.setTint(0xffffff);
+            this.imageGroup.setTint(this.IDLE_COLOR);
 
             const word = this.currentChain.map((tile) => tile.letter).join("");
             if (!this.foundWords.has(word)) {
