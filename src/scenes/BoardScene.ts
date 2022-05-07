@@ -1,5 +1,6 @@
 import eventsCenter, { WHOEvents } from "../WHOEvents";
 import { DEBUG } from "../Main";
+import { getWordScore, pointExitRect } from "../utils";
 
 export default class BoardScene extends Phaser.Scene {
     imageGroup!: Phaser.GameObjects.Group;
@@ -18,7 +19,7 @@ export default class BoardScene extends Phaser.Scene {
 
     LETTER_SPRITE_SIZE!: number;
     readonly GRID_SIZE = 4;
-    readonly GAME_TIME_SECS = 60;
+    readonly GAME_TIME_SECS = 5;
     readonly DRAG_COLOR = 0xffffff;
     readonly VALID_COLOR = 0x00ff00;
     readonly REPEAT_COLOR = 0xfcd303;
@@ -125,7 +126,8 @@ export default class BoardScene extends Phaser.Scene {
                 words: Array.from(this.foundWords),
             }),
         });
-        this.scene.switch("splash");
+        this.scene.pause();
+        this.scene.launch("result");
     }
 
     drawBoard(board: BoardLetters) {
@@ -217,7 +219,7 @@ export default class BoardScene extends Phaser.Scene {
                         this.LETTER_SPRITE_SIZE * this.GRID_SIZE,
                         this.LETTER_SPRITE_SIZE * this.GRID_SIZE
                     ),
-                    this.pointExitRect
+                    pointExitRect
                 )
                 .on("pointerover", () => this.endChain())
                 .setDepth(-1);
@@ -236,10 +238,6 @@ export default class BoardScene extends Phaser.Scene {
         }
 
         this.scene.setVisible(true);
-    }
-
-    pointExitRect(rect: Phaser.Geom.Rectangle, x: number, y: number) {
-        return x < 0 || y < 0 || x > rect.width || y > rect.height;
     }
 
     startChain(tile: Tile) {
@@ -333,7 +331,7 @@ export default class BoardScene extends Phaser.Scene {
             const word = this.currentChain.map((tile) => tile.letter).join("");
             if (!this.foundWords.has(word)) {
                 if (this.boardWords.has(word)) {
-                    const wordScore = this.getWordScore(word);
+                    const wordScore = getWordScore(word);
                     if (DEBUG) {
                         console.log(
                             `Found word "${word}" of score: ${wordScore}`
@@ -350,26 +348,5 @@ export default class BoardScene extends Phaser.Scene {
         }
         this.isDragging = false;
         console.log(`cur score: ${this.curScore}`);
-    }
-
-    getWordScore(word: string) {
-        let score = 0;
-        for (let i = 3; i <= word.length; i++) {
-            // trying to emulate what I'm seeing in the scores of word hunt
-            switch (i) {
-                case 3:
-                    score += 100;
-                    break;
-                case 4:
-                    score += 300;
-                    break;
-                case 6:
-                    score += 600;
-                    break;
-                default:
-                    score += 400;
-            }
-        }
-        return score;
     }
 }

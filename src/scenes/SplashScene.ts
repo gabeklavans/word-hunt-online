@@ -1,9 +1,8 @@
+import { BAD_COLOR, GOOD_COLOR } from "../Main";
 import eventsCenter, { WHOEvents } from "../WHOEvents";
 
 export default class SplashScene extends Phaser.Scene {
     boardDone = false;
-    badButtonColor = 0xff0000;
-    goodButtonColor = 0x00ff00;
 
     overlayButton!: Phaser.GameObjects.Rectangle;
     overlayGroup!: Phaser.GameObjects.Group;
@@ -32,7 +31,7 @@ export default class SplashScene extends Phaser.Scene {
                 Math.floor(this.cameras.main.height * 0.75),
                 this.cameras.main.width * 0.3,
                 this.cameras.main.height * 0.1,
-                this.badButtonColor
+                BAD_COLOR
             )
             .on("pointerdown", this.startButtonHandler, this);
         this.overlayGroup.add(this.overlayButton);
@@ -53,7 +52,7 @@ export default class SplashScene extends Phaser.Scene {
                 .forEach((child) => child.setInteractive());
         }
         if (this.overlayButton) {
-            this.overlayButton.fillColor = this.goodButtonColor;
+            this.overlayButton.fillColor = GOOD_COLOR;
         }
         this.boardDone = true;
     }
