@@ -1,5 +1,5 @@
 import eventsCenter, { WHOEvents } from "../WHOEvents";
-import { DEBUG } from "../Main";
+import { DEBUG, sessionId } from "../Main";
 import { getWordScore, pointExitRect } from "../utils";
 
 export default class BoardScene extends Phaser.Scene {
@@ -52,6 +52,8 @@ export default class BoardScene extends Phaser.Scene {
         });
 
         // get a board from API
+        console.log(sessionId);
+
         const response = await fetch("http://192.168.0.42:3000/board", {
             method: "GET",
         });
