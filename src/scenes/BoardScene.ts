@@ -1,5 +1,5 @@
 import eventsCenter, { WHOEvents } from "../WHOEvents";
-import { DEBUG, sessionId } from "../Main";
+import { DEBUG, SESSION_ID } from "../Main";
 import { getWordScore, pointExitRect } from "../utils";
 
 export default class BoardScene extends Phaser.Scene {
@@ -52,11 +52,14 @@ export default class BoardScene extends Phaser.Scene {
         });
 
         // get a board from API
-        console.log(sessionId);
+        console.log(SESSION_ID);
 
-        const response = await fetch("http://192.168.0.42:3000/board", {
-            method: "GET",
-        });
+        const response = await fetch(
+            `http://localhost:3000/who/board/${SESSION_ID}`,
+            {
+                method: "GET",
+            }
+        );
         const boardData: BoardData = await response.json();
         if (DEBUG) {
             console.log("Board data:");
@@ -121,7 +124,8 @@ export default class BoardScene extends Phaser.Scene {
         if (DEBUG) {
             console.log("Game over!");
         }
-        fetch("http://192.168.0.42:3000/result", {
+        // send result to bot
+        fetch(`http://localhost:3000/who/result/${SESSION_ID}`, {
             method: "POST",
             body: JSON.stringify({
                 score: this.curScore,
