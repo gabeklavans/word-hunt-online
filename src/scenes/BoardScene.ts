@@ -1,5 +1,5 @@
 import eventsCenter, { WHOEvents } from "../WHOEvents";
-import { DEBUG, SESSION_ID } from "../Main";
+import { DEBUG, SESSION_ID, USER_ID } from "../Main";
 import { getWordScore, pointExitRect } from "../utils";
 
 export default class BoardScene extends Phaser.Scene {
@@ -125,7 +125,7 @@ export default class BoardScene extends Phaser.Scene {
             console.log("Game over!");
         }
         // send result to bot
-        fetch(`http://localhost:3000/who/result/${SESSION_ID}`, {
+        fetch(`http://localhost:3000/who/result/${SESSION_ID}/${USER_ID}`, {
             method: "POST",
             body: JSON.stringify({
                 score: this.curScore,

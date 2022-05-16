@@ -11,6 +11,7 @@ export const GOOD_COLOR = 0x00ff00;
 
 const urlParams = new URLSearchParams(window.location.search);
 export const SESSION_ID = urlParams.get("session");
+export const USER_ID = urlParams.get("user");
 
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
