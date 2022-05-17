@@ -1,4 +1,4 @@
-import { BAD_COLOR, GOOD_COLOR } from "../Main";
+import { BAD_COLOR, GOOD_COLOR, IS_SPECTATE } from "../Main";
 import eventsCenter, { WHOEvents } from "../WHOEvents";
 
 export default class SplashScene extends Phaser.Scene {
@@ -37,7 +37,11 @@ export default class SplashScene extends Phaser.Scene {
         this.overlayGroup.add(this.overlayButton);
         this.overlayGroup.setDepth(100);
 
-        this.scene.launch("board");
+        if (!IS_SPECTATE) {
+            this.scene.launch("board");
+        } else {
+            this.scene.switch("result");
+        }
     }
 
     startButtonHandler() {

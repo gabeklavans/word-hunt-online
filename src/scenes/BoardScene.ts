@@ -132,8 +132,8 @@ export default class BoardScene extends Phaser.Scene {
                 words: Array.from(this.foundWords),
             }),
         });
-        this.scene.pause();
-        this.scene.launch("result");
+        // TODO: make sure this doesn't cut off the fetch above
+        this.scene.switch("result");
     }
 
     drawBoard(board: BoardLetters) {

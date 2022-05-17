@@ -12,6 +12,9 @@ export const GOOD_COLOR = 0x00ff00;
 const urlParams = new URLSearchParams(window.location.search);
 export const SESSION_ID = urlParams.get("session");
 export const USER_ID = urlParams.get("user");
+// TODO: this is probably an unhandled exception area
+const isSpectate = urlParams.get("spectate");
+export const IS_SPECTATE = JSON.parse(isSpectate as string) as boolean;
 
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
