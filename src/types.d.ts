@@ -28,3 +28,14 @@ type BoardData = {
     board: BoardLetters;
     words: string[];
 };
+
+type SessionView = {
+    board?: BoardData;
+    scores: {
+        [key: string]: {
+            score: number;
+            words?: string[] | undefined;
+        };
+    };
+    done: boolean;
+};
