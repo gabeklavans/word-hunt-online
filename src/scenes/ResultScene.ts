@@ -4,22 +4,43 @@ export default class ResultScene extends Phaser.Scene {
     doneButton!: Phaser.GameObjects.Rectangle;
     userOneWordGroup!: Phaser.GameObjects.Group;
     userTwoWordGroup!: Phaser.GameObjects.Group;
+    resultRefreshTimer!: Phaser.Time.TimerEvent;
+    waitTextTimer!: Phaser.Time.TimerEvent;
+    waitingText!: Phaser.GameObjects.Text;
 
     constructor() {
         super({ key: "result", active: false });
     }
 
     async create() {
-        this.time.addEvent({
+        this.userOneWordGroup = this.add.group();
+        this.userTwoWordGroup = this.add.group();
+        this.waitingText = this.add
+            .text(300, 100, "Waiting for results", {
+                color: "black",
+            })
+            .setDepth(2);
+        let numDots = 0;
+
+        this.resultRefreshTimer = this.time.addEvent({
             delay: 3 * 1000,
             callback: this.setSessionInfo,
             callbackScope: this,
             loop: true,
-            startAt: 1.5 * 1000,
+            startAt: 2.5 * 1000,
         });
 
-        this.userOneWordGroup = this.add.group();
-        this.userTwoWordGroup = this.add.group();
+        this.waitTextTimer = this.time.addEvent({
+            delay: 1 * 1000,
+            callback: () => {
+                numDots = (numDots + 1) % 4;
+                this.waitingText.setText(
+                    `Waiting for results${".".repeat(numDots)}` // I love that js just has a repeat method
+                );
+            },
+            loop: true,
+            callbackScope: this,
+        });
 
         this.add.rectangle(
             this.cameras.main.centerX,
@@ -106,12 +127,22 @@ export default class ResultScene extends Phaser.Scene {
             }
         };
 
-        const userOneWords =
-            session.scores[Object.keys(session.scores)[0]].words;
-        addAndAlignWords(this.userOneWordGroup, 100, userOneWords);
+        const scoredUsers = Object.keys(session.scores);
 
-        const userTwoWords =
-            session.scores[Object.keys(session.scores)[1]].words;
-        addAndAlignWords(this.userTwoWordGroup, 500, userTwoWords);
+        if (scoredUsers[0]) {
+            const userOneWords = session.scores[scoredUsers[0]].words;
+            addAndAlignWords(this.userOneWordGroup, 100, userOneWords);
+        }
+        if (scoredUsers[1]) {
+            const userTwoWords =
+                session.scores[Object.keys(session.scores)[1]].words;
+            addAndAlignWords(this.userTwoWordGroup, 500, userTwoWords);
+        }
+
+        if (session.done) {
+            this.resultRefreshTimer.remove();
+            this.waitTextTimer.remove();
+            this.waitingText.setText("Results!");
+        }
     }
 }
