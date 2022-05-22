@@ -19,7 +19,7 @@ export default class BoardScene extends Phaser.Scene {
 
     LETTER_SPRITE_SIZE!: number;
     readonly GRID_SIZE = 4;
-    readonly GAME_TIME_SECS = 5;
+    readonly GAME_TIME_SECS = 70;
     readonly DRAG_COLOR = 0xf5c398;
     readonly REPEAT_COLOR = 0xeddf3e;
     readonly IDLE_COLOR = 0xad5100;
@@ -35,6 +35,10 @@ export default class BoardScene extends Phaser.Scene {
     async create() {
         // events
         eventsCenter.on(WHOEvents.GameStart, this.handleGameStart, this);
+        if (DEBUG) {
+            const keyObj = this.input.keyboard.addKey("E"); // Get key object
+            keyObj.on("down", this.handleGameEnd, this);
+        }
 
         // initialize variables
         const gameWidth = this.game.config.width;
