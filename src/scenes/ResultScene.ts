@@ -1,9 +1,7 @@
-import { GOOD_COLOR, SESSION_ID } from "../Main";
+import { SESSION_ID } from "../Main";
 
 export default class ResultScene extends Phaser.Scene {
     doneButton!: Phaser.GameObjects.Rectangle;
-    userOneWordGroup!: Phaser.GameObjects.Group;
-    userTwoWordGroup!: Phaser.GameObjects.Group;
     resultRefreshTimer!: Phaser.Time.TimerEvent;
     waitTextTimer!: Phaser.Time.TimerEvent;
     waitingText!: Phaser.GameObjects.Text;
@@ -13,12 +11,12 @@ export default class ResultScene extends Phaser.Scene {
     }
 
     async create() {
-        this.userOneWordGroup = this.add.group();
-        this.userTwoWordGroup = this.add.group();
         this.waitingText = this.add
-            .text(300, 100, "Waiting for results", {
+            .text(this.cameras.main.centerX, 50, "Waiting for results", {
                 color: "black",
+                fontSize: "25px",
             })
+            .setOrigin(0.5)
             .setDepth(2);
         let numDots = 0;
 
@@ -51,47 +49,35 @@ export default class ResultScene extends Phaser.Scene {
             Math.floor(255 * 0.2)
         );
 
-        this.add
-            .text(
-                this.cameras.main.centerX,
-                this.cameras.main.centerY,
-                "You're done.",
-                {
-                    color: "black",
-                    fontSize: "10vh",
-                }
-            )
-            .setOrigin(0.5);
-
-        const buttonContainer = this.add.container(
-            this.cameras.main.centerX,
-            Math.floor(this.cameras.main.height * 0.75)
-        );
-        buttonContainer.add(
-            this.add
-                .rectangle(
-                    0,
-                    0,
-                    this.cameras.main.width * 0.3,
-                    this.cameras.main.height * 0.1,
-                    GOOD_COLOR
-                )
-                .setInteractive()
-                .on("pointerdown", this.doneButtonHandler, this)
-        );
-        buttonContainer.add(
-            this.add
-                .text(0, 0, "Exit", {
-                    fontSize: `${this.cameras.main.height * 0.07}px`,
-                    color: "black",
-                })
-                .setOrigin(0.5)
-        );
+        // const buttonContainer = this.add.container(
+        //     this.cameras.main.centerX,
+        //     Math.floor(this.cameras.main.height * 0.75)
+        // );
+        // buttonContainer.add(
+        //     this.add
+        //         .rectangle(
+        //             0,
+        //             0,
+        //             this.cameras.main.width * 0.3,
+        //             this.cameras.main.height * 0.1,
+        //             GOOD_COLOR
+        //         )
+        //         .setInteractive()
+        //         .on("pointerdown", this.doneButtonHandler, this)
+        // );
+        // buttonContainer.add(
+        //     this.add
+        //         .text(0, 0, "Exit", {
+        //             fontSize: `${this.cameras.main.height * 0.07}px`,
+        //             color: "black",
+        //         })
+        //         .setOrigin(0.5)
+        // );
     }
 
-    doneButtonHandler() {
-        // TODO: Exit the webpage
-    }
+    // doneButtonHandler() {
+    //     window.close();
+    // }
 
     async setSessionInfo() {
         const res = await fetch(
@@ -102,42 +88,30 @@ export default class ResultScene extends Phaser.Scene {
         );
         const session: SessionView = await res.json();
 
-        const addAndAlignWords = (
-            textGroup: Phaser.GameObjects.Group,
+        const scoredUsers = Object.keys(session.scores);
+
+        const displayWordList = (
+            user: string,
             xOffset: number,
-            wordList?: string[]
+            xOrigin: number
         ) => {
-            textGroup.clear(true, true);
+            let words: string[] = [];
+            if (user) {
+                words.push(...[user, "", "--------", ""]);
+                words = words.concat(session.scores[user].words);
 
-            if (wordList) {
-                for (const word of wordList) {
-                    textGroup.add(
-                        this.add.text(0, 0, word, { color: "black" })
-                    );
-                }
-
-                Phaser.Actions.GridAlign(textGroup.getChildren(), {
-                    width: 1,
-                    height: textGroup.getLength(),
-                    cellWidth: 32,
-                    cellHeight: 32,
-                    x: xOffset,
-                    y: 100,
-                });
+                this.add
+                    .text(xOffset, 100, words, {
+                        color: "black",
+                        fontSize: "25px",
+                    })
+                    .setDepth(1)
+                    .setOrigin(xOrigin, 0);
             }
         };
 
-        const scoredUsers = Object.keys(session.scores);
-
-        if (scoredUsers[0]) {
-            const userOneWords = session.scores[scoredUsers[0]].words;
-            addAndAlignWords(this.userOneWordGroup, 100, userOneWords);
-        }
-        if (scoredUsers[1]) {
-            const userTwoWords =
-                session.scores[Object.keys(session.scores)[1]].words;
-            addAndAlignWords(this.userTwoWordGroup, 500, userTwoWords);
-        }
+        displayWordList(scoredUsers[0], 100, 0);
+        displayWordList(scoredUsers[1], this.cameras.main.width - 100, 1);
 
         if (session.done) {
             this.resultRefreshTimer.remove();

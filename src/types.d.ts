@@ -34,7 +34,7 @@ type SessionView = {
     scores: {
         [key: string]: {
             score: number;
-            words?: string[] | undefined;
+            words: string[];
         };
     };
     done: boolean;
