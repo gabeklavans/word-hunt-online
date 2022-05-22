@@ -1,4 +1,5 @@
 import { SESSION_ID } from "../Main";
+import { getWordScore } from "../utils";
 
 export default class ResultScene extends Phaser.Scene {
     doneButton!: Phaser.GameObjects.Rectangle;
@@ -97,8 +98,19 @@ export default class ResultScene extends Phaser.Scene {
         ) => {
             let words: string[] = [];
             if (user) {
-                words.push(...[user, "", "--------", ""]);
-                words = words.concat(session.scores[user].words);
+                words.push(
+                    ...[
+                        user + "\t-\t" + session.scores[user].score,
+                        "",
+                        "--------",
+                        "",
+                    ]
+                );
+                words = words.concat(
+                    session.scores[user].words.map(
+                        (word) => word + "\t-\t" + getWordScore(word)
+                    )
+                );
 
                 this.add
                     .text(xOffset, 100, words, {
