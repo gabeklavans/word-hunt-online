@@ -1,3 +1,4 @@
+import { getSessionInfo } from "../api";
 import { SESSION_ID } from "../Main";
 import { getWordScore } from "../utils";
 
@@ -81,12 +82,7 @@ export default class ResultScene extends Phaser.Scene {
     // }
 
     async setSessionInfo() {
-        const res = await fetch(
-            `http://localhost:3000/who/session/${SESSION_ID}`,
-            {
-                method: "GET",
-            }
-        );
+        const res = await getSessionInfo(SESSION_ID ?? "");
         const session: SessionView = await res.json();
 
         const scoredUsers = Object.keys(session.scores);

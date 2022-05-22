@@ -1,6 +1,7 @@
 import eventsCenter, { WHOEvents } from "../WHOEvents";
 import { DEBUG, GOOD_COLOR, SESSION_ID, USER_ID } from "../Main";
 import { getWordScore, pointExitRect } from "../utils";
+import { getBoardData, sendResults } from "../api";
 
 export default class BoardScene extends Phaser.Scene {
     imageGroup!: Phaser.GameObjects.Group;
@@ -57,12 +58,7 @@ export default class BoardScene extends Phaser.Scene {
         // get a board from API
         console.log(SESSION_ID);
 
-        const response = await fetch(
-            `http://localhost:3000/who/board/${SESSION_ID}`,
-            {
-                method: "GET",
-            }
-        );
+        const response = await getBoardData(SESSION_ID ?? "");
         const boardData: BoardData = await response.json();
         if (DEBUG) {
             console.log("Board data:");
@@ -128,12 +124,9 @@ export default class BoardScene extends Phaser.Scene {
             console.log("Game over!");
         }
         // send result to bot
-        fetch(`http://localhost:3000/result/${SESSION_ID}/${USER_ID}`, {
-            method: "POST",
-            body: JSON.stringify({
-                score: this.curScore,
-                words: Array.from(this.foundWords),
-            }),
+        sendResults(SESSION_ID ?? "", USER_ID ?? "", {
+            score: this.curScore,
+            words: Array.from(this.foundWords),
         });
         // TODO: make sure this doesn't cut off the fetch above
         this.scene.switch("result");
