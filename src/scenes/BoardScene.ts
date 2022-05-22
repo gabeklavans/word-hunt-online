@@ -1,5 +1,5 @@
 import eventsCenter, { WHOEvents } from "../WHOEvents";
-import { DEBUG, SESSION_ID, USER_ID } from "../Main";
+import { DEBUG, GOOD_COLOR, SESSION_ID, USER_ID } from "../Main";
 import { getWordScore, pointExitRect } from "../utils";
 
 export default class BoardScene extends Phaser.Scene {
@@ -20,9 +20,8 @@ export default class BoardScene extends Phaser.Scene {
     LETTER_SPRITE_SIZE!: number;
     readonly GRID_SIZE = 4;
     readonly GAME_TIME_SECS = 5;
-    readonly DRAG_COLOR = 0xffffff;
-    readonly VALID_COLOR = 0x00ff00;
-    readonly REPEAT_COLOR = 0xfcd303;
+    readonly DRAG_COLOR = 0xf5c398;
+    readonly REPEAT_COLOR = 0xeddf3e;
     readonly IDLE_COLOR = 0xad5100;
 
     constructor() {
@@ -140,7 +139,7 @@ export default class BoardScene extends Phaser.Scene {
         for (let row = 0; row < this.GRID_SIZE; row++) {
             for (let col = 0; col < this.GRID_SIZE; col++) {
                 const tileImage = this.add
-                    .image(0, 0, "acho")
+                    .image(0, 0, "tile")
                     .setDisplaySize(
                         this.LETTER_SPRITE_SIZE,
                         this.LETTER_SPRITE_SIZE
@@ -323,7 +322,7 @@ export default class BoardScene extends Phaser.Scene {
             if (this.foundWords.has(word)) {
                 this.updateChainColors(this.REPEAT_COLOR);
             } else if (this.boardWords.has(word)) {
-                this.updateChainColors(this.VALID_COLOR);
+                this.updateChainColors(GOOD_COLOR);
             } else {
                 this.updateChainColors(this.DRAG_COLOR);
             }
