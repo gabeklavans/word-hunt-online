@@ -125,7 +125,7 @@ export default class BoardScene extends Phaser.Scene {
             console.log("Game over!");
         }
         // send result to bot
-        fetch(`http://localhost:3000/who/result/${SESSION_ID}/${USER_ID}`, {
+        fetch(`http://localhost:3000/result/${SESSION_ID}/${USER_ID}`, {
             method: "POST",
             body: JSON.stringify({
                 score: this.curScore,
