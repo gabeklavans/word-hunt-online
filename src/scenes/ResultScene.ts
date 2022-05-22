@@ -106,6 +106,7 @@ export default class ResultScene extends Phaser.Scene {
                         fontSize: "25px",
                     })
                     .setDepth(1)
+                    .setResolution(10)
                     .setOrigin(xOrigin, 0);
             }
         };
