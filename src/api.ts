@@ -1,4 +1,4 @@
-const SERVER_URL = "http://localhost:3000";
+const SERVER_URL = "http://leet.dabe.tech:3000";
 
 export async function getBoardData(sessionId: string) {
     return await fetch(`${SERVER_URL}/who/board/${sessionId}`, {
