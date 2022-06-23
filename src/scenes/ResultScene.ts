@@ -2,6 +2,17 @@ import { getSessionInfo } from "../api";
 import { SESSION_ID } from "../Main";
 import { getWordScore } from "../utils";
 
+import {
+    ScrollablePanel,
+    RoundRectangle,
+    Label,
+    Sizer,
+} from "phaser3-rex-plugins/templates/ui/ui-components";
+
+const COLOR_PRIMARY = 0x4e342e;
+const COLOR_LIGHT = 0x7b5e57;
+const COLOR_DARK = 0x260e04;
+
 export default class ResultScene extends Phaser.Scene {
     doneButton!: Phaser.GameObjects.Rectangle;
     resultRefreshTimer!: Phaser.Time.TimerEvent;
@@ -13,6 +24,37 @@ export default class ResultScene extends Phaser.Scene {
     }
 
     async create() {
+        const track = new RoundRectangle(this, 0, 0, 20, 10, 10, COLOR_DARK);
+        this.add.existing(track);
+        const thumb = new RoundRectangle(this, 0, 0, 0, 0, 13, COLOR_LIGHT);
+        this.add.existing(thumb);
+        var panel = new ScrollablePanel(this, {
+            x: 400,
+            y: 300,
+            width: 600,
+
+            scrollMode: 1,
+
+            panel: {
+                child: this.CreatePanel(),
+            },
+
+            slider: {
+                track,
+                thumb,
+            },
+        }).layout();
+        this.add.existing(panel);
+
+        // Add new child
+        const bg = new RoundRectangle(this, 0, 0, 200, 400, 20, COLOR_PRIMARY);
+        this.add.existing(bg);
+        (panel.getElement("panel") as Phaser.GameObjects.Container).add(
+            this.CreatePaper("GGGG", bg)
+        );
+        // Layout scrollable panel again
+        panel.layout();
+
         this.waitingText = this.add
             .text(this.cameras.main.centerX, 50, "Waiting for results", {
                 color: "black",
@@ -81,6 +123,52 @@ export default class ResultScene extends Phaser.Scene {
     //     window.close();
     // }
 
+    CreatePaper(content: string | string[], background: any) {
+        const label = new Label(this, {
+            orientation: "y",
+            width: background.displayWidth,
+            height: background.displayHeight,
+
+            background: background,
+            text: this.add.text(0, 0, content),
+
+            align: "center",
+        });
+        return label;
+    }
+
+    CreatePanel() {
+        var panel = new Sizer(this, {
+            orientation: "x",
+            space: { item: 50, top: 20, bottom: 20 },
+        });
+        this.add.existing(panel);
+
+        var contentList = [
+            ["AAAA", "ASDASD"],
+            "BBBB",
+            "CCCC",
+            "DDDDD",
+            "EEEEE",
+            "FFFFF",
+        ];
+        for (var i = 0, cnt = contentList.length; i < cnt; i++) {
+            const ting = new RoundRectangle(
+                this,
+                0,
+                0,
+                200,
+                400,
+                20,
+                COLOR_PRIMARY
+            );
+            this.add.existing(ting);
+            panel.add(this.CreatePaper(contentList[i], ting));
+        }
+
+        return panel;
+    }
+
     async setSessionInfo() {
         const res = await getSessionInfo(SESSION_ID ?? "");
         const session: SessionView = await res.json();
@@ -95,8 +183,6 @@ export default class ResultScene extends Phaser.Scene {
             let words: string[] = [];
             const userInfo = session.scoredUsers[user];
             if (user) {
-                console.log(userInfo.score);
-
                 const scoreText = userInfo.score
                     ? userInfo.score!.toString()
                     : "waiting...";
