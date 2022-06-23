@@ -1,4 +1,4 @@
-const SERVER_URL = "http://leet.dabe.tech:3000";
+import { SERVER_URL } from "./env";
 
 export async function getBoardData(sessionId: string) {
     return await fetch(`${SERVER_URL}/who/board/${sessionId}`, {
