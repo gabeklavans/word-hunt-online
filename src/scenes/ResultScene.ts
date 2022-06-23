@@ -95,12 +95,18 @@ export default class ResultScene extends Phaser.Scene {
             let words: string[] = [];
             const userInfo = session.scoredUsers[user];
             if (user) {
+                console.log(userInfo.score);
+
+                const scoreText = userInfo.score
+                    ? userInfo.score!.toString()
+                    : "waiting...";
+
                 words.push(
                     ...[
-                        userInfo.name + "\t-\t" + userInfo.score,
+                        userInfo.name + "\t-\t" + scoreText,
                         "",
                         "--------",
-                        "",
+                        "", //
                     ]
                 );
                 words = words.concat(

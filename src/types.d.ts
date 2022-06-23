@@ -33,7 +33,7 @@ type SessionView = {
     board?: BoardData;
     scoredUsers: {
         [key: string]: {
-            score: number;
+            score?: number;
             words: string[];
             name: string;
         };

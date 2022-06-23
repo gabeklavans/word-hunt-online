@@ -1,4 +1,5 @@
 import { SERVER_URL } from "./env";
+import { DEBUG } from "./Main";
 
 export async function getBoardData(sessionId: string) {
     return await fetch(`${SERVER_URL}/who/board/${sessionId}`, {
@@ -19,9 +20,19 @@ export async function sendResults(
     userId: string,
     data: { score: number; words: string[] }
 ) {
-    return await fetch(`${SERVER_URL}/result/${sessionId}/${userId}`, {
-        method: "POST",
-        mode: "cors",
-        body: JSON.stringify(data),
-    });
+    try {
+        return await fetch(`${SERVER_URL}/result/${sessionId}/${userId}`, {
+            method: "POST",
+            mode: "cors",
+            body: JSON.stringify(data),
+        });
+    } catch (error) {
+        if (DEBUG) {
+            console.error(`sessionId: ${sessionId}`);
+            console.error(`userId: ${userId}`);
+            console.error("data:");
+            console.error(data);
+            console.error(error);
+        }
+    }
 }
