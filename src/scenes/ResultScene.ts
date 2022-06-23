@@ -85,7 +85,7 @@ export default class ResultScene extends Phaser.Scene {
         const res = await getSessionInfo(SESSION_ID ?? "");
         const session: SessionView = await res.json();
 
-        const scoredUsers = Object.keys(session.scores);
+        const scoredUsers = Object.keys(session.scoredUsers);
 
         const displayWordList = (
             user: string,
@@ -93,17 +93,18 @@ export default class ResultScene extends Phaser.Scene {
             xOrigin: number
         ) => {
             let words: string[] = [];
+            const userInfo = session.scoredUsers[user];
             if (user) {
                 words.push(
                     ...[
-                        user + "\t-\t" + session.scores[user].score,
+                        userInfo.name + "\t-\t" + userInfo.score,
                         "",
                         "--------",
                         "",
                     ]
                 );
                 words = words.concat(
-                    session.scores[user].words.map(
+                    session.scoredUsers[user].words.map(
                         (word) => word + "\t-\t" + getWordScore(word)
                     )
                 );

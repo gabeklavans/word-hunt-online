@@ -31,10 +31,11 @@ type BoardData = {
 
 type SessionView = {
     board?: BoardData;
-    scores: {
+    scoredUsers: {
         [key: string]: {
             score: number;
             words: string[];
+            name: string;
         };
     };
     done: boolean;
