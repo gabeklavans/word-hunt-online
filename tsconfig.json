@@ -6,7 +6,8 @@
         "allowJs": true,
         "allowSyntheticDefaultImports": true,
         "strict": true,
-        "forceConsistentCasingInFileNames": true
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true
     },
     "include": ["./src/**/*"]
 }
