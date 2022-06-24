@@ -17,7 +17,10 @@ export default class ResultScene extends Phaser.Scene {
     doneButton!: Phaser.GameObjects.Rectangle;
     resultRefreshTimer!: Phaser.Time.TimerEvent;
     waitTextTimer!: Phaser.Time.TimerEvent;
-    waitingText!: Phaser.GameObjects.Text;
+    waitingText!: Phaser.GameObjects.BitmapText;
+
+    session?: SessionView;
+    panel!: ScrollablePanel;
 
     constructor() {
         super({ key: "result", active: false });
@@ -28,7 +31,7 @@ export default class ResultScene extends Phaser.Scene {
         this.add.existing(track);
         const thumb = new RoundRectangle(this, 0, 0, 0, 0, 13, COLOR_LIGHT);
         this.add.existing(thumb);
-        var panel = new ScrollablePanel(this, {
+        this.panel = new ScrollablePanel(this, {
             x: 400,
             y: 300,
             width: 600,
@@ -36,7 +39,7 @@ export default class ResultScene extends Phaser.Scene {
             scrollMode: 1,
 
             panel: {
-                child: this.CreatePanel(),
+                child: this.createScrollPanel(),
             },
 
             slider: {
@@ -44,22 +47,17 @@ export default class ResultScene extends Phaser.Scene {
                 thumb,
             },
         }).layout();
-        this.add.existing(panel);
-
-        // Add new child
-        const bg = new RoundRectangle(this, 0, 0, 200, 400, 20, COLOR_PRIMARY);
-        this.add.existing(bg);
-        (panel.getElement("panel") as Phaser.GameObjects.Container).add(
-            this.CreatePaper("GGGG", bg)
-        );
-        // Layout scrollable panel again
-        panel.layout();
+        this.add.existing(this.panel);
 
         this.waitingText = this.add
-            .text(this.cameras.main.centerX, 50, "Waiting for results", {
-                color: "black",
-                fontSize: "25px",
-            })
+            .bitmapText(
+                this.cameras.main.centerX,
+                50,
+                "gothic",
+                "Waiting for results",
+                25
+            )
+            .setTintFill(0x000000)
             .setOrigin(0.5)
             .setDepth(2);
         let numDots = 0;
@@ -83,15 +81,6 @@ export default class ResultScene extends Phaser.Scene {
             loop: true,
             callbackScope: this,
         });
-
-        this.add.rectangle(
-            this.cameras.main.centerX,
-            this.cameras.main.centerY,
-            this.cameras.main.width,
-            this.cameras.main.height,
-            0xffffff,
-            Math.floor(255 * 0.2)
-        );
 
         // const buttonContainer = this.add.container(
         //     this.cameras.main.centerX,
@@ -123,102 +112,97 @@ export default class ResultScene extends Phaser.Scene {
     //     window.close();
     // }
 
-    CreatePaper(content: string | string[], background: any) {
+    createScoreCard(content: string | string[]) {
+        // TODO: Add a vertical scolling container here with a header
+        const bg = new RoundRectangle(this, 0, 0, 200, 400, 20, COLOR_PRIMARY);
+        this.add.existing(bg);
+
         const label = new Label(this, {
             orientation: "y",
-            width: background.displayWidth,
-            height: background.displayHeight,
+            width: bg.displayWidth,
+            height: bg.displayHeight,
+            space: { top: 10, bottom: 10, left: 10, right: 10 },
+            background: bg,
+            text: this.add.bitmapText(0, 0, "gothic", content).setFontSize(15),
 
-            background: background,
-            text: this.add.text(0, 0, content),
-
-            align: "center",
+            align: "top",
         });
         return label;
     }
 
-    CreatePanel() {
+    createScrollPanel() {
         var panel = new Sizer(this, {
             orientation: "x",
             space: { item: 50, top: 20, bottom: 20 },
         });
         this.add.existing(panel);
 
-        var contentList = [
-            ["AAAA", "ASDASD"],
-            "BBBB",
-            "CCCC",
-            "DDDDD",
-            "EEEEE",
-            "FFFFF",
-        ];
-        for (var i = 0, cnt = contentList.length; i < cnt; i++) {
-            const ting = new RoundRectangle(
-                this,
-                0,
-                0,
-                200,
-                400,
-                20,
-                COLOR_PRIMARY
-            );
-            this.add.existing(ting);
-            panel.add(this.CreatePaper(contentList[i], ting));
-        }
-
         return panel;
     }
 
     async setSessionInfo() {
         const res = await getSessionInfo(SESSION_ID ?? "");
-        const session: SessionView = await res.json();
+        const newSession: SessionView = await res.json();
 
-        const scoredUsers = Object.keys(session.scoredUsers);
+        // if the session changed by having more scores, then update
+        if (
+            !this.session ||
+            Object.keys(this.session.scoredUsers).length !=
+                Object.keys(newSession.scoredUsers).length
+        ) {
+            this.session = newSession;
+            const scoredUsers = Object.keys(this.session.scoredUsers);
 
-        const displayWordList = (
-            user: string,
-            xOffset: number,
-            xOrigin: number
-        ) => {
-            let words: string[] = [];
-            const userInfo = session.scoredUsers[user];
-            if (user) {
-                const scoreText = userInfo.score
-                    ? userInfo.score!.toString()
-                    : "waiting...";
+            const displayWordList = (
+                user: string,
+                xOffset: number,
+                xOrigin: number
+            ) => {
+                let words: string[] = [];
+                const userInfo = this.session!.scoredUsers[user];
+                if (user) {
+                    const scoreText = userInfo.score
+                        ? userInfo.score!.toString()
+                        : "waiting...";
 
-                words.push(
-                    ...[
-                        userInfo.name + "\t-\t" + scoreText,
-                        "",
-                        "--------",
-                        "", //
-                    ]
-                );
-                words = words.concat(
-                    session.scoredUsers[user].words.map(
-                        (word) => word + "\t-\t" + getWordScore(word)
-                    )
-                );
+                    words.push(
+                        ...[
+                            userInfo.name + " - " + scoreText,
+                            "--------", //
+                        ]
+                    );
+                    words = words.concat(
+                        this.session!.scoredUsers[user].words.map(
+                            (word) => word + " - " + getWordScore(word)
+                        )
+                    );
 
-                this.add
-                    .text(xOffset, 100, words, {
-                        color: "black",
-                        fontSize: "25px",
-                    })
-                    .setDepth(1)
-                    .setResolution(10)
-                    .setOrigin(xOrigin, 0);
+                    // this.add
+                    //     .text(xOffset, 100, words, {
+                    //         color: "black",
+                    //         fontSize: "25px",
+                    //     })
+                    //     .setDepth(1)
+                    //     .setResolution(10)
+                    //     .setOrigin(xOrigin, 0);
+
+                    (
+                        this.panel.getElement(
+                            "panel"
+                        ) as Phaser.GameObjects.Container
+                    ).add(this.createScoreCard(words));
+                    this.panel.layout();
+                }
+            };
+
+            displayWordList(scoredUsers[0], 100, 0);
+            displayWordList(scoredUsers[1], this.cameras.main.width - 100, 1);
+
+            if (this.session.done) {
+                this.resultRefreshTimer.remove();
+                this.waitTextTimer.remove();
+                this.waitingText.setText("Results!");
             }
-        };
-
-        displayWordList(scoredUsers[0], 100, 0);
-        displayWordList(scoredUsers[1], this.cameras.main.width - 100, 1);
-
-        if (session.done) {
-            this.resultRefreshTimer.remove();
-            this.waitTextTimer.remove();
-            this.waitingText.setText("Results!");
         }
     }
 }

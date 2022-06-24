@@ -5,11 +5,10 @@ export default class Preloader extends Phaser.Scene {
 
     preload(): void {
         this.load.image("acho", "assets/acho.png");
-        this.load.scenePlugin(
-            "rexuiplugin",
-            "https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexuiplugin.min.js",
-            "rexUI",
-            "rexUI"
+        this.load.bitmapFont(
+            "gothic",
+            "https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/assets/fonts/gothic.png",
+            "https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/assets/fonts/gothic.xml"
         );
     }
 
