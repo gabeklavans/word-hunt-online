@@ -131,7 +131,7 @@ export default class ResultScene extends Phaser.Scene {
     }
 
     createScrollPanel() {
-        var panel = new Sizer(this, {
+        const panel = new Sizer(this, {
             orientation: "x",
             space: { item: 50, top: 20, bottom: 20 },
         });
@@ -153,50 +153,50 @@ export default class ResultScene extends Phaser.Scene {
             this.session = newSession;
             const scoredUsers = Object.keys(this.session.scoredUsers);
 
-            const displayWordList = (
-                user: string,
-                xOffset: number,
-                xOrigin: number
-            ) => {
-                let words: string[] = [];
-                const userInfo = this.session!.scoredUsers[user];
-                if (user) {
-                    const scoreText = userInfo.score
-                        ? userInfo.score!.toString()
-                        : "waiting...";
+            const displayWordList = (user: string) => {
+                if (this.session) {
+                    let words: string[] = [];
+                    const userInfo = this.session.scoredUsers[user];
+                    if (user) {
+                        const scoreText = userInfo.score
+                            ? userInfo.score.toString()
+                            : "waiting...";
 
-                    words.push(
-                        ...[
-                            userInfo.name + " - " + scoreText,
-                            "--------", //
-                        ]
-                    );
-                    words = words.concat(
-                        this.session!.scoredUsers[user].words.map(
-                            (word) => word + " - " + getWordScore(word)
-                        )
-                    );
+                        words.push(
+                            ...[
+                                userInfo.name + " - " + scoreText,
+                                "--------", //
+                            ]
+                        );
+                        words = words.concat(
+                            this.session.scoredUsers[user].words.map(
+                                (word) => word + " - " + getWordScore(word)
+                            )
+                        );
 
-                    // this.add
-                    //     .text(xOffset, 100, words, {
-                    //         color: "black",
-                    //         fontSize: "25px",
-                    //     })
-                    //     .setDepth(1)
-                    //     .setResolution(10)
-                    //     .setOrigin(xOrigin, 0);
+                        // this.add
+                        //     .text(xOffset, 100, words, {
+                        //         color: "black",
+                        //         fontSize: "25px",
+                        //     })
+                        //     .setDepth(1)
+                        //     .setResolution(10)
+                        //     .setOrigin(xOrigin, 0);
 
-                    (
-                        this.panel.getElement(
-                            "panel"
-                        ) as Phaser.GameObjects.Container
-                    ).add(this.createScoreCard(words));
-                    this.panel.layout();
+                        (
+                            this.panel.getElement(
+                                "panel"
+                            ) as Phaser.GameObjects.Container
+                        ).add(this.createScoreCard(words));
+                        this.panel.layout();
+                    }
+                } else {
+                    console.error("Missing session info!");
                 }
             };
 
-            displayWordList(scoredUsers[0], 100, 0);
-            displayWordList(scoredUsers[1], this.cameras.main.width - 100, 1);
+            displayWordList(scoredUsers[0]);
+            displayWordList(scoredUsers[1]);
 
             if (this.session.done) {
                 this.resultRefreshTimer.remove();

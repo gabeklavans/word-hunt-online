@@ -8,5 +8,6 @@ module.exports = {
         semi: ["error", "always"],
         curly: 0,
         "@typescript-eslint/no-unused-vars": 2,
+        "@typescript-eslint/no-non-null-assertion": 1,
     },
 };
