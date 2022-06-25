@@ -174,15 +174,6 @@ export default class ResultScene extends Phaser.Scene {
                             )
                         );
 
-                        // this.add
-                        //     .text(xOffset, 100, words, {
-                        //         color: "black",
-                        //         fontSize: "25px",
-                        //     })
-                        //     .setDepth(1)
-                        //     .setResolution(10)
-                        //     .setOrigin(xOrigin, 0);
-
                         (
                             this.panel.getElement(
                                 "panel"
