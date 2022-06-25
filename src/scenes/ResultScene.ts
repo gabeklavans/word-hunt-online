@@ -34,8 +34,8 @@ export default class ResultScene extends Phaser.Scene {
         this.add.existing(thumb);
         this.panel = new ScrollablePanel(this, {
             x: 400,
-            y: 300,
-            width: 600,
+            y: 780,
+            width: 780,
 
             scrollMode: 1,
 
@@ -47,16 +47,18 @@ export default class ResultScene extends Phaser.Scene {
                 track,
                 thumb,
             },
-        }).layout();
+        })
+            .setOrigin(0.5, 1)
+            .layout();
         this.add.existing(this.panel);
 
         this.waitingText = this.add
             .bitmapText(
                 this.cameras.main.centerX,
-                50,
+                40,
                 "gothic",
                 "Waiting for results",
-                25
+                30
             )
             .setTintFill(0x000000)
             .setOrigin(0.5)
@@ -124,7 +126,7 @@ export default class ResultScene extends Phaser.Scene {
 
     createScoreCard(content: string | string[]) {
         // TODO: Add a vertical scolling container here with a header
-        const bg = new RoundRectangle(this, 0, 0, 200, 400, 20, COLOR_PRIMARY);
+        const bg = new RoundRectangle(this, 0, 0, 300, 600, 15, COLOR_PRIMARY);
         this.add.existing(bg);
 
         const label = new Label(this, {
@@ -133,7 +135,7 @@ export default class ResultScene extends Phaser.Scene {
             height: bg.displayHeight,
             space: { top: 10, bottom: 10, left: 10, right: 10 },
             background: bg,
-            text: this.add.bitmapText(0, 0, "gothic", content).setFontSize(15),
+            text: this.add.bitmapText(0, 0, "gothic", content).setFontSize(21),
 
             align: "top",
         });
