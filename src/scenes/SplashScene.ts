@@ -4,8 +4,9 @@ import eventsCenter, { WHOEvents } from "../WHOEvents";
 export default class SplashScene extends Phaser.Scene {
     boardDone = false;
 
-    overlayButton!: Phaser.GameObjects.Rectangle;
-    overlayGroup!: Phaser.GameObjects.Group;
+    startButtonContainer!: Phaser.GameObjects.Container;
+    startButton!: Phaser.GameObjects.Rectangle;
+    startButtonText!: Phaser.GameObjects.BitmapText;
 
     constructor() {
         super({ key: "splash" });
@@ -14,28 +15,53 @@ export default class SplashScene extends Phaser.Scene {
     create() {
         eventsCenter.on(WHOEvents.BoardDone, this.boardDoneHandler, this);
 
-        this.overlayGroup = this.add.group();
-        this.overlayGroup.add(
-            this.add.rectangle(
+        this.add
+            .bitmapText(
+                this.cameras.main.centerX,
+                300,
+                "gothic",
+                "Connect letters together by dragging your finer. Make as many words as you can."
+            )
+            .setOrigin(0.5)
+            .setDepth(3)
+            .setTintFill(0x000000)
+            .setMaxWidth(600)
+            .setCenterAlign()
+            .setFontSize(30);
+
+        this.add
+            .rectangle(
                 this.cameras.main.centerX,
                 this.cameras.main.centerY,
                 this.cameras.main.width,
                 this.cameras.main.height,
-                0xffffff,
-                Math.floor(255 * 0.2)
+                0xffffff
             )
-        );
-        this.overlayButton = this.add
+            .setDepth(2)
+            .setInteractive();
+
+        this.startButton = this.add
             .rectangle(
-                this.cameras.main.centerX,
-                Math.floor(this.cameras.main.height * 0.75),
+                0,
+                0,
                 this.cameras.main.width * 0.3,
                 this.cameras.main.height * 0.1,
                 BAD_COLOR
             )
+            .setName("button")
             .on("pointerdown", this.startButtonHandler, this);
-        this.overlayGroup.add(this.overlayButton);
-        this.overlayGroup.setDepth(100);
+        this.startButtonText = this.add
+            .bitmapText(0, 0, "gothic", "Start!")
+            .setOrigin(0.5);
+
+        this.startButtonContainer = this.add
+            .container(
+                this.cameras.main.centerX,
+                Math.floor(this.cameras.main.height * 0.75)
+            )
+            .add(this.startButton)
+            .add(this.startButtonText)
+            .setDepth(3);
 
         if (!IS_SPECTATE) {
             this.scene.launch("board");
@@ -50,13 +76,9 @@ export default class SplashScene extends Phaser.Scene {
     }
 
     boardDoneHandler() {
-        if (this.overlayGroup) {
-            this.overlayGroup
-                .getChildren()
-                .forEach((child) => child.setInteractive());
-        }
-        if (this.overlayButton) {
-            this.overlayButton.fillColor = GOOD_COLOR;
+        this.startButtonContainer.getByName("button").setInteractive();
+        if (this.startButtonContainer) {
+            this.startButton.fillColor = GOOD_COLOR;
         }
         this.boardDone = true;
     }
