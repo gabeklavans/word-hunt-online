@@ -1,6 +1,7 @@
 import { getSessionInfo } from "../api";
 import { SESSION_ID } from "../Main";
 import { getWordScore } from "../utils";
+import { isEqual } from "lodash";
 
 import {
     ScrollablePanel,
@@ -62,25 +63,34 @@ export default class ResultScene extends Phaser.Scene {
             .setDepth(2);
         let numDots = 0;
 
-        this.resultRefreshTimer = this.time.addEvent({
-            delay: 3 * 1000,
-            callback: this.setSessionInfo,
-            callbackScope: this,
-            loop: true,
-            startAt: 2.5 * 1000,
-        });
+        const res = await getSessionInfo(SESSION_ID ?? "");
+        this.session = await res.json();
 
-        this.waitTextTimer = this.time.addEvent({
-            delay: 1 * 1000,
-            callback: () => {
-                numDots = (numDots + 1) % 4;
-                this.waitingText.setText(
-                    `Waiting for results${".".repeat(numDots)}` // I love that js just has a repeat method
-                );
-            },
-            loop: true,
-            callbackScope: this,
-        });
+        if (!this.session?.done) {
+            this.resultRefreshTimer = this.time.addEvent({
+                delay: 3 * 1000,
+                callback: this.checkForUpdatedSession,
+                callbackScope: this,
+                loop: true,
+                startAt: 2.5 * 1000,
+            });
+
+            this.waitTextTimer = this.time.addEvent({
+                delay: 1 * 1000,
+                callback: () => {
+                    numDots = (numDots + 1) % 4;
+                    this.waitingText.setText(
+                        `Waiting for results${".".repeat(numDots)}` // I love that js just has a repeat method
+                    );
+                },
+                loop: true,
+                callbackScope: this,
+            });
+        } else {
+            this.waitingText.setText("Results!");
+        }
+
+        this.displayScores();
 
         // const buttonContainer = this.add.container(
         //     this.cameras.main.centerX,
@@ -140,60 +150,48 @@ export default class ResultScene extends Phaser.Scene {
         return panel;
     }
 
-    async setSessionInfo() {
+    async checkForUpdatedSession() {
         const res = await getSessionInfo(SESSION_ID ?? "");
         const newSession: SessionView = await res.json();
 
-        // if the session changed by having more scores, then update
-        if (
-            !this.session ||
-            Object.keys(this.session.scoredUsers).length !=
-                Object.keys(newSession.scoredUsers).length
-        ) {
-            this.session = newSession;
-            const scoredUsers = Object.keys(this.session.scoredUsers);
+        if (!this.session) {
+            console.error("Session not initialized yet!");
+            return;
+        }
 
-            const displayWordList = (user: string) => {
-                if (this.session) {
-                    let words: string[] = [];
-                    const userInfo = this.session.scoredUsers[user];
-                    if (user) {
-                        const scoreText = userInfo.score
-                            ? userInfo.score.toString()
-                            : "waiting...";
+        if (!isEqual(newSession.scoredUsers, this.session.scoredUsers)) {
+            this.scene.restart();
+        }
+    }
 
-                        words.push(
-                            ...[
-                                userInfo.name + " - " + scoreText,
-                                "--------", //
-                            ]
-                        );
-                        words = words.concat(
-                            this.session.scoredUsers[user].words.map(
-                                (word) => word + " - " + getWordScore(word)
-                            )
-                        );
+    displayScores() {
+        if (!this.session) {
+            console.error("Session not initialized yet!");
+            return;
+        }
 
-                        (
-                            this.panel.getElement(
-                                "panel"
-                            ) as Phaser.GameObjects.Container
-                        ).add(this.createScoreCard(words));
-                        this.panel.layout();
-                    }
-                } else {
-                    console.error("Missing session info!");
-                }
-            };
+        for (const scoredUser of Object.values(this.session.scoredUsers)) {
+            let words: string[] = [];
+            const scoreText = scoredUser.score
+                ? scoredUser.score.toString()
+                : "waiting...";
 
-            displayWordList(scoredUsers[0]);
-            displayWordList(scoredUsers[1]);
+            words.push(
+                ...[
+                    scoredUser.name + " - " + scoreText,
+                    "--------", //
+                ]
+            );
+            words = words.concat(
+                scoredUser.words.map(
+                    (word) => word + " - " + getWordScore(word)
+                )
+            );
 
-            if (this.session.done) {
-                this.resultRefreshTimer.remove();
-                this.waitTextTimer.remove();
-                this.waitingText.setText("Results!");
-            }
+            (
+                this.panel.getElement("panel") as Phaser.GameObjects.Container
+            ).add(this.createScoreCard(words));
+            this.panel.layout();
         }
     }
 }

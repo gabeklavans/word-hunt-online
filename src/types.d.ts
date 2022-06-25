@@ -29,14 +29,16 @@ type BoardData = {
     words: string[];
 };
 
+type Scores = {
+    score?: number;
+    words: string[];
+    name: string;
+};
+
 type SessionView = {
     board?: BoardData;
     scoredUsers: {
-        [key: string]: {
-            score?: number;
-            words: string[];
-            name: string;
-        };
+        [key: string]: Scores;
     };
     done: boolean;
 };
