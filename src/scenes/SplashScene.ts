@@ -20,7 +20,7 @@ export default class SplashScene extends Phaser.Scene {
                 this.cameras.main.centerX,
                 300,
                 "gothic",
-                "Connect letters together by dragging your finer. Make as many words as you can."
+                "Connect letters together to make as many words as you can."
             )
             .setOrigin(0.5)
             .setDepth(3)
