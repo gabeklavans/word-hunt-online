@@ -9,5 +9,6 @@ module.exports = {
         curly: 0,
         "@typescript-eslint/no-unused-vars": 2,
         "@typescript-eslint/no-non-null-assertion": 1,
+        eqeqeq: [1, "smart"],
     },
 };
