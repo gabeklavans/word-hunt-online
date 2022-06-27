@@ -20,7 +20,7 @@ export default class BoardScene extends Phaser.Scene {
 
     LETTER_SPRITE_SIZE!: number;
     readonly GRID_SIZE = 4;
-    readonly GAME_TIME_SECS = 70;
+    readonly GAME_TIME_SECS = 80;
     readonly DRAG_COLOR = 0xf5c398;
     readonly REPEAT_COLOR = 0xeddf3e;
     readonly IDLE_COLOR = 0xad5100;
