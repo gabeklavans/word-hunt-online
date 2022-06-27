@@ -7,14 +7,15 @@ import {
     ScrollablePanel,
     RoundRectangle,
     Sizer,
-    TextArea,
+    GridTable,
 } from "phaser3-rex-plugins/templates/ui/ui-components";
 
-const COLOR_PRIMARY = 0x4e342e;
-const COLOR_LIGHT = 0x7b5e57;
-const COLOR_DARK = 0x260e04;
-
 export default class ResultScene extends Phaser.Scene {
+    readonly FONT_SIZE = 20;
+    readonly COLOR_PRIMARY = 0x4e342e;
+    readonly COLOR_LIGHT = 0x7b5e57;
+    readonly COLOR_DARK = 0x260e04;
+
     doneButton!: Phaser.GameObjects.Rectangle;
     resultRefreshTimer!: Phaser.Time.TimerEvent;
     waitTextTimer!: Phaser.Time.TimerEvent;
@@ -28,9 +29,25 @@ export default class ResultScene extends Phaser.Scene {
     }
 
     async create() {
-        const track = new RoundRectangle(this, 0, 0, 20, 10, 10, COLOR_DARK);
+        const track = new RoundRectangle(
+            this,
+            0,
+            0,
+            20,
+            10,
+            10,
+            this.COLOR_DARK
+        );
         this.add.existing(track);
-        const thumb = new RoundRectangle(this, 0, 0, 0, 0, 13, COLOR_LIGHT);
+        const thumb = new RoundRectangle(
+            this,
+            0,
+            0,
+            0,
+            0,
+            13,
+            this.COLOR_LIGHT
+        );
         this.add.existing(thumb);
         this.panel = new ScrollablePanel(this, {
             x: 400,
@@ -124,8 +141,35 @@ export default class ResultScene extends Phaser.Scene {
     //     window.close();
     // }
 
-    createScoreCard(content: string | string[]) {
-        // TODO: Add a vertical scolling container here with a header
+    createScoreRow(
+        word?: Phaser.GameObjects.BitmapText,
+        score?: Phaser.GameObjects.BitmapText,
+        bg?: RoundRectangle
+    ) {
+        const background = bg ?? new RoundRectangle(this, 0, 0, 20, 20, 0);
+        this.add.existing(background);
+
+        const wordText =
+            word ??
+            this.add.bitmapText(0, 0, "gothic").setFontSize(this.FONT_SIZE);
+        const scoreText =
+            score ??
+            this.add.bitmapText(0, 0, "gothic").setFontSize(this.FONT_SIZE);
+
+        const sizer = new Sizer(this, {
+            width: 260, // parent panel width - padding
+            height: background.displayHeight,
+            orientation: "x",
+        })
+            .addBackground(background)
+            .add(wordText, 0, "center", { left: 10 }, false, "word")
+            .addSpace()
+            .add(scoreText, 0, "center", { right: 10 }, false, "score");
+        this.add.existing(sizer);
+        return sizer;
+    }
+
+    createScoreCard(userName: string, score: string, wordScores?: WordScore[]) {
         const background = new RoundRectangle(
             this,
             0,
@@ -133,34 +177,71 @@ export default class ResultScene extends Phaser.Scene {
             300,
             600,
             15,
-            COLOR_PRIMARY
+            this.COLOR_PRIMARY
         );
         this.add.existing(background);
 
-        const track = new RoundRectangle(this, 0, 0, 20, 10, 10, 0x260e04);
-        const thumb = new RoundRectangle(this, 0, 0, 0, 0, 13, 0x7b5e57);
-        this.add.existing(track);
-        this.add.existing(thumb);
+        const headerBg = new RoundRectangle(
+            this,
+            0,
+            0,
+            20,
+            40,
+            0,
+            this.COLOR_DARK
+        );
+        this.add.existing(headerBg);
 
-        const label = new TextArea(this, {
-            orientation: 0,
+        const gridTable = new GridTable(this, {
+            x: 0,
+            y: 0,
             width: background.displayWidth,
             height: background.displayHeight,
-            space: { top: 10, bottom: 10, left: 10, right: 10 },
+            scrollMode: 0,
             background,
-            slider: {
-                track,
-                thumb,
+            header: this.createScoreRow(
+                this.add
+                    .bitmapText(0, 0, "gothic", userName)
+                    .setFontSize(this.FONT_SIZE),
+                this.add
+                    .bitmapText(0, 0, "gothic", score)
+                    .setFontSize(this.FONT_SIZE),
+                headerBg
+            ),
+            table: {
+                cellHeight: 30,
+                columns: 1,
+                mask: {
+                    padding: 2,
+                },
+                reuseCellContainer: true,
             },
-            text: this.add.bitmapText(0, 0, "gothic").setFontSize(21),
-        }).layout();
+            space: {
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: 20,
 
-        if (typeof content !== "string") {
-            content = content.join("\n");
-        }
+                table: 10,
+                header: 10,
+            },
+            createCellContainerCallback: (cell, cellContainer: any) => {
+                const item = cell.item as WordScore;
+                if (!cellContainer) {
+                    cellContainer = this.createScoreRow();
+                    console.log(cell.index + ": create new cell-container");
+                } else {
+                    console.log(cell.index + ": reuse cell-container");
+                }
 
-        label.setText(content);
-        return label;
+                cellContainer.getElement("word").setText(item.word);
+                cellContainer.getElement("score").setText(item.score);
+                return cellContainer;
+            },
+            items: wordScores ?? [],
+        });
+
+        return gridTable;
     }
 
     createScrollPanel() {
@@ -194,27 +275,32 @@ export default class ResultScene extends Phaser.Scene {
         }
 
         for (const scoredUser of Object.values(this.session.scoredUsers)) {
-            let words: string[] = [];
-            const scoreText = scoredUser.score
-                ? scoredUser.score.toString()
-                : "waiting...";
-
-            words.push(
-                ...[
-                    scoredUser.name + " - " + scoreText,
-                    "--------", //
-                ]
-            );
-            words = words.concat(
-                scoredUser.words.map(
-                    (word) => word + " - " + getWordScore(word)
-                )
-            );
-
+            const wordScores = scoredUser.words
+                .map((word) => {
+                    return { word: word, score: getWordScore(word).toString() };
+                })
+                .sort(this.sortWordScores);
             (
                 this.panel.getElement("panel") as Phaser.GameObjects.Container
-            ).add(this.createScoreCard(words));
+            ).add(
+                this.createScoreCard(
+                    scoredUser.name,
+                    scoredUser.score?.toString() ?? "waiting...",
+                    wordScores
+                )
+            );
             this.panel.layout();
+        }
+    }
+
+    sortWordScores(a: WordScore, b: WordScore) {
+        // descending score order else ascending albabetical order
+        const aScore = parseInt(a.score) ?? Number.MIN_SAFE_INTEGER;
+        const bScore = parseInt(b.score) ?? Number.MIN_SAFE_INTEGER;
+        if (aScore !== bScore) {
+            return bScore - aScore;
+        } else {
+            return a.word.localeCompare(b.word);
         }
     }
 }

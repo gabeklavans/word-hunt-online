@@ -24,6 +24,8 @@ type BoardLetters = [
     string // 16
 ];
 
+type WordScore = { word: string; score: string };
+
 type BoardData = {
     board: BoardLetters;
     words: string[];
