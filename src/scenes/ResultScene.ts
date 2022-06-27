@@ -6,8 +6,8 @@ import { isEqual } from "lodash";
 import {
     ScrollablePanel,
     RoundRectangle,
-    Label,
     Sizer,
+    TextArea,
 } from "phaser3-rex-plugins/templates/ui/ui-components";
 
 const COLOR_PRIMARY = 0x4e342e;
@@ -126,19 +126,40 @@ export default class ResultScene extends Phaser.Scene {
 
     createScoreCard(content: string | string[]) {
         // TODO: Add a vertical scolling container here with a header
-        const bg = new RoundRectangle(this, 0, 0, 300, 600, 15, COLOR_PRIMARY);
-        this.add.existing(bg);
+        const background = new RoundRectangle(
+            this,
+            0,
+            0,
+            300,
+            600,
+            15,
+            COLOR_PRIMARY
+        );
+        this.add.existing(background);
 
-        const label = new Label(this, {
-            orientation: "y",
-            width: bg.displayWidth,
-            height: bg.displayHeight,
+        const track = new RoundRectangle(this, 0, 0, 20, 10, 10, 0x260e04);
+        const thumb = new RoundRectangle(this, 0, 0, 0, 0, 13, 0x7b5e57);
+        this.add.existing(track);
+        this.add.existing(thumb);
+
+        const label = new TextArea(this, {
+            orientation: 0,
+            width: background.displayWidth,
+            height: background.displayHeight,
             space: { top: 10, bottom: 10, left: 10, right: 10 },
-            background: bg,
-            text: this.add.bitmapText(0, 0, "gothic", content).setFontSize(21),
+            background,
+            slider: {
+                track,
+                thumb,
+            },
+            text: this.add.bitmapText(0, 0, "gothic").setFontSize(21),
+        }).layout();
 
-            align: "top",
-        });
+        if (typeof content !== "string") {
+            content = content.join("\n");
+        }
+
+        label.setText(content);
         return label;
     }
 
