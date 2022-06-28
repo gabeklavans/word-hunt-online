@@ -11,7 +11,7 @@ import {
 } from "phaser3-rex-plugins/templates/ui/ui-components";
 
 export default class ResultScene extends Phaser.Scene {
-    readonly FONT_SIZE = 20;
+    readonly FONT_SIZE = 30;
     readonly COLOR_PRIMARY = 0x4e342e;
     readonly COLOR_LIGHT = 0x7b5e57;
     readonly COLOR_DARK = 0x260e04;
@@ -87,7 +87,7 @@ export default class ResultScene extends Phaser.Scene {
 
         if (!this.session?.done) {
             this.resultRefreshTimer = this.time.addEvent({
-                delay: 3 * 1000,
+                delay: 6 * 1000,
                 callback: this.checkForUpdatedSession,
                 callbackScope: this,
                 loop: true,
@@ -142,19 +142,17 @@ export default class ResultScene extends Phaser.Scene {
     // }
 
     createScoreRow(
-        word?: Phaser.GameObjects.BitmapText,
-        score?: Phaser.GameObjects.BitmapText,
+        word?: Phaser.GameObjects.Text,
+        score?: Phaser.GameObjects.Text,
         bg?: RoundRectangle
     ) {
         const background = bg ?? new RoundRectangle(this, 0, 0, 20, 20, 0);
         this.add.existing(background);
 
         const wordText =
-            word ??
-            this.add.bitmapText(0, 0, "gothic").setFontSize(this.FONT_SIZE);
+            word ?? this.add.text(0, 0, "").setFontSize(this.FONT_SIZE);
         const scoreText =
-            score ??
-            this.add.bitmapText(0, 0, "gothic").setFontSize(this.FONT_SIZE);
+            score ?? this.add.text(0, 0, "").setFontSize(this.FONT_SIZE);
 
         const sizer = new Sizer(this, {
             width: 260, // parent panel width - padding
@@ -201,13 +199,16 @@ export default class ResultScene extends Phaser.Scene {
             background,
             header: this.createScoreRow(
                 this.add
-                    .bitmapText(0, 0, "gothic", userName)
-                    .setFontSize(this.FONT_SIZE),
+                    .text(0, 0, userName)
+                    .setFontSize(this.FONT_SIZE)
+                    .setStroke("white", 1),
                 this.add
-                    .bitmapText(0, 0, "gothic", score)
-                    .setFontSize(this.FONT_SIZE),
+                    .text(0, 0, score)
+                    .setFontSize(this.FONT_SIZE)
+                    .setStroke("white", 1),
                 headerBg
             ),
+            // TODO: Add "scroll for more" footer maybe
             table: {
                 cellHeight: 30,
                 columns: 1,
