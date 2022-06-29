@@ -15,5 +15,6 @@ module.exports = {
         bundle: true,
         minify: true,
         sourcemap: false,
+        target: "es2019",
     },
 };
