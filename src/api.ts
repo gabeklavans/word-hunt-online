@@ -23,6 +23,10 @@ export async function sendResults(
     try {
         return await fetch(`${SERVER_URL}/result/${sessionId}/${userId}`, {
             method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            },
             mode: "cors",
             body: JSON.stringify(data),
         });

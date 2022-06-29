@@ -87,7 +87,7 @@ export default class ResultScene extends Phaser.Scene {
 
         if (!this.session?.done) {
             this.resultRefreshTimer = this.time.addEvent({
-                delay: 6 * 1000,
+                delay: 3 * 1000,
                 callback: this.checkForUpdatedSession,
                 callbackScope: this,
                 loop: true,
