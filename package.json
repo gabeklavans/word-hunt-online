@@ -9,8 +9,7 @@
         "build": "snowpack build",
         "lint": "eslint . --ext .ts",
         "lint:fix": "eslint . --ext .ts --fix",
-        "format": "prettier --write \"**/*.{ts,js,json,html}\"",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "format": "prettier --write \"**/*.{ts,js,json,html}\""
     },
     "author": "paulasantamaria",
     "license": "MIT",
