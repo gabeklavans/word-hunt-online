@@ -1,1 +1,1 @@
-export const SERVER_URL = "http://leet.dabe.tech:3000";
+export const SERVER_URL = "https://gamejay.herokuapp.com";
