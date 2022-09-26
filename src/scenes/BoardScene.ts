@@ -169,6 +169,7 @@ export default class BoardScene extends Phaser.Scene {
                         .text(0, 0, tile.letter.toUpperCase(), {
                             color: "black",
                             fontSize: `${this.LETTER_SPRITE_SIZE / 2}px`,
+                            fontFamily: "Interstate"
                         })
                         .setOrigin(0.5)
                 );
