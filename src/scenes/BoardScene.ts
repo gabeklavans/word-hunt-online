@@ -89,6 +89,20 @@ export default class BoardScene extends Phaser.Scene {
 
         // tell splash screen we've got a valid board
         eventsCenter.emit(WHOEvents.BoardDone);
+
+        if (DEBUG) {
+            this.add
+                .text(this.cameras.main.centerX, 0, "END", {
+                    color: "black",
+                    fontSize: `${this.LETTER_SPRITE_SIZE / 3}px`,
+                    fontFamily: "Interstate",
+                })
+                .setOrigin(0.5)
+                .setInteractive()
+                .addListener("pointerdown", () => {
+                    this.handleGameEnd();
+                });
+        }
     }
 
     update(): void {
@@ -169,7 +183,7 @@ export default class BoardScene extends Phaser.Scene {
                         .text(0, 0, tile.letter.toUpperCase(), {
                             color: "black",
                             fontSize: `${this.LETTER_SPRITE_SIZE / 2}px`,
-                            fontFamily: "Interstate"
+                            fontFamily: "Interstate",
                         })
                         .setOrigin(0.5)
                 );
