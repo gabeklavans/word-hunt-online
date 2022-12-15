@@ -1,1 +1,1 @@
-export const SERVER_URL = "https://gamejay.herokuapp.com";
+export const SERVER_URL = "http://192.168.88.218:3000";

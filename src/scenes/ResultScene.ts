@@ -8,6 +8,7 @@ import {
     RoundRectangle,
     Sizer,
     GridTable,
+    GridSizer,
 } from "phaser3-rex-plugins/templates/ui/ui-components";
 
 export default class ResultScene extends Phaser.Scene {
@@ -110,36 +111,7 @@ export default class ResultScene extends Phaser.Scene {
         }
 
         this.displayScores();
-
-        // const buttonContainer = this.add.container(
-        //     this.cameras.main.centerX,
-        //     Math.floor(this.cameras.main.height * 0.75)
-        // );
-        // buttonContainer.add(
-        //     this.add
-        //         .rectangle(
-        //             0,
-        //             0,
-        //             this.cameras.main.width * 0.3,
-        //             this.cameras.main.height * 0.1,
-        //             GOOD_COLOR
-        //         )
-        //         .setInteractive()
-        //         .on("pointerdown", this.doneButtonHandler, this)
-        // );
-        // buttonContainer.add(
-        //     this.add
-        //         .text(0, 0, "Exit", {
-        //             fontSize: `${this.cameras.main.height * 0.07}px`,
-        //             color: "black",
-        //         })
-        //         .setOrigin(0.5)
-        // );
     }
-
-    // doneButtonHandler() {
-    //     window.close();
-    // }
 
     createScoreRow(
         word?: Phaser.GameObjects.Text,
@@ -190,12 +162,12 @@ export default class ResultScene extends Phaser.Scene {
         );
         this.add.existing(headerBg);
 
-        const gridTable = new GridTable(this, {
+        const gridTable = new GridSizer(this, {
             x: 0,
             y: 0,
             width: background.displayWidth,
             height: background.displayHeight,
-            scrollMode: 0,
+            // scrollMode: 0,
             background,
             header: this.createScoreRow(
                 this.add
@@ -208,6 +180,10 @@ export default class ResultScene extends Phaser.Scene {
                     .setStroke("white", 1),
                 headerBg
             ),
+            footer:
+                wordScores?.length ?? 0 > 3
+                    ? this.add.text(0, 0, "And more words...")
+                    : undefined,
             // TODO: Add "scroll for more" footer maybe
             table: {
                 cellHeight: 30,
@@ -223,10 +199,8 @@ export default class ResultScene extends Phaser.Scene {
                 top: 20,
                 bottom: 20,
 
-                table: 10,
-                header: 10,
             },
-            createCellContainerCallback: (cell, cellContainer: any) => {
+            createCellContainerCallback: (cell, cellContainer) => {
                 const item = cell.item as WordScore;
                 if (!cellContainer) {
                     cellContainer = this.createScoreRow();
@@ -239,7 +213,7 @@ export default class ResultScene extends Phaser.Scene {
                 cellContainer.getElement("score").setText(item.score);
                 return cellContainer;
             },
-            items: wordScores ?? [],
+            items: wordScores?.slice(0, 3) ?? [],
         });
 
         return gridTable;
