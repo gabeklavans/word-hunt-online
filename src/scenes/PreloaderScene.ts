@@ -20,7 +20,7 @@ export default class Preloader extends Phaser.Scene {
         graphics.fillRoundedRect(10, 10, 180, 180, 32);
         graphics.generateTexture("tile", 200, 200);
         
-        // this is toally me when I force the site to load this font
+        // this is totally me when I force the site to load this font
         this.add.text(0, 0, "loading...", {
             fontFamily: "Interstate",
         });
