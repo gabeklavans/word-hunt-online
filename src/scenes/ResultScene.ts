@@ -1,7 +1,7 @@
 import { getSessionInfo } from "../api";
 import { SESSION_ID } from "../Main";
 import { getWordScore } from "../utils";
-import { ceil, isEqual } from "lodash";
+import { isEqual } from "lodash";
 
 export default class ResultScene extends Phaser.Scene {
     readonly FONT_SIZE = 30;
@@ -158,13 +158,7 @@ export default class ResultScene extends Phaser.Scene {
         }
 
         Object.values(this.session.scoredUsers)
-            .sort((wScoreA, wScoreB) => {
-                if (!wScoreA.score && !wScoreB.score) return 0;
-                else if (!wScoreA.score) return 1;
-                else if (!wScoreB.score) return -1;
-
-                return wScoreB.score - wScoreA.score;
-            })
+            .sort(this.sortScores)
             .slice(startIdx, startIdx + 2)
             .forEach((wordScore, idx) => {
                 const targetCard = [this.leftangle, this.rightangle][idx];
@@ -206,8 +200,6 @@ export default class ResultScene extends Phaser.Scene {
                     )
                     .setLeftAlign();
 
-                console.log(scoreTexts.originX);
-
                 Phaser.Display.Align.To.BottomLeft(
                     scoreTexts,
                     nameText,
@@ -219,7 +211,7 @@ export default class ResultScene extends Phaser.Scene {
     }
 
     sortWordScores(a: WordScore, b: WordScore) {
-        // descending score order else ascending albabetical order
+        // descending score order else ascending alphabetical order
         const aScore = parseInt(a.score) ?? Number.MIN_SAFE_INTEGER;
         const bScore = parseInt(b.score) ?? Number.MIN_SAFE_INTEGER;
         if (aScore !== bScore) {
@@ -227,5 +219,13 @@ export default class ResultScene extends Phaser.Scene {
         } else {
             return a.word.localeCompare(b.word);
         }
+    }
+
+    sortScores(a: Scores, b: Scores) {
+        if (!a.score && !b.score) return 0;
+        else if (!a.score) return 1;
+        else if (!b.score) return -1;
+
+        return b.score - a.score;
     }
 }
