@@ -3,13 +3,6 @@ import { SESSION_ID } from "../Main";
 import { getWordScore } from "../utils";
 import { ceil, isEqual } from "lodash";
 
-import {
-    ScrollablePanel,
-    RoundRectangle,
-    Sizer,
-    GridTable,
-} from "phaser3-rex-plugins/templates/ui/ui-components";
-
 export default class ResultScene extends Phaser.Scene {
     readonly FONT_SIZE = 30;
     readonly COLOR_PRIMARY = 0x4e342e;
@@ -30,7 +23,6 @@ export default class ResultScene extends Phaser.Scene {
     nextScoresButton!: Phaser.GameObjects.Image;
 
     session?: SessionView;
-    panel!: ScrollablePanel;
 
     constructor() {
         super({ key: "result", active: false });
@@ -144,120 +136,6 @@ export default class ResultScene extends Phaser.Scene {
     // doneButtonHandler() {
     //     window.close();
     // }
-
-    createScoreRow(
-        word?: Phaser.GameObjects.Text,
-        score?: Phaser.GameObjects.Text,
-        bg?: RoundRectangle
-    ) {
-        const background = bg ?? new RoundRectangle(this, 0, 0, 20, 20, 0);
-        this.add.existing(background);
-
-        const wordText =
-            word ?? this.add.text(0, 0, "").setFontSize(this.FONT_SIZE);
-        const scoreText =
-            score ?? this.add.text(0, 0, "").setFontSize(this.FONT_SIZE);
-
-        const sizer = new Sizer(this, {
-            width: 260, // parent panel width - this.padding
-            height: background.displayHeight,
-            orientation: "x",
-        })
-            .addBackground(background)
-            .add(wordText, 0, "center", { left: 10 }, false, "word")
-            .addSpace()
-            .add(scoreText, 0, "center", { right: 10 }, false, "score");
-        this.add.existing(sizer);
-        return sizer;
-    }
-
-    createScoreCard(userName: string, score: string, wordScores?: WordScore[]) {
-        const background = new RoundRectangle(
-            this,
-            0,
-            0,
-            300,
-            600,
-            15,
-            this.COLOR_PRIMARY
-        );
-        this.add.existing(background);
-
-        const headerBg = new RoundRectangle(
-            this,
-            0,
-            0,
-            20,
-            40,
-            0,
-            this.COLOR_DARK
-        );
-        this.add.existing(headerBg);
-
-        const gridTable = new GridTable(this, {
-            x: 0,
-            y: 0,
-            width: background.displayWidth,
-            height: background.displayHeight,
-            scrollMode: 0,
-            background,
-            header: this.createScoreRow(
-                this.add
-                    .text(0, 0, userName)
-                    .setFontSize(this.FONT_SIZE)
-                    .setStroke("white", 1),
-                this.add
-                    .text(0, 0, score)
-                    .setFontSize(this.FONT_SIZE)
-                    .setStroke("white", 1),
-                headerBg
-            ),
-            // TODO: Add "scroll for more" footer maybe
-            table: {
-                cellHeight: 30,
-                columns: 1,
-                mask: {
-                    padding: 2,
-                },
-                reuseCellContainer: true,
-            },
-            space: {
-                left: 20,
-                right: 20,
-                top: 20,
-                bottom: 20,
-
-                table: 10,
-                header: 10,
-            },
-            createCellContainerCallback: (cell, cellContainer: any) => {
-                const item = cell.item as WordScore;
-                if (!cellContainer) {
-                    cellContainer = this.createScoreRow();
-                    console.log(cell.index + ": create new cell-container");
-                } else {
-                    console.log(cell.index + ": reuse cell-container");
-                }
-
-                cellContainer.getElement("word").setText(item.word);
-                cellContainer.getElement("score").setText(item.score);
-                return cellContainer;
-            },
-            items: wordScores ?? [],
-        });
-
-        return gridTable;
-    }
-
-    createScrollPanel() {
-        const panel = new Sizer(this, {
-            orientation: "x",
-            space: { item: 50, top: 20, bottom: 20 },
-        });
-        this.add.existing(panel);
-
-        return panel;
-    }
 
     async checkForUpdatedSession() {
         const res = await getSessionInfo(SESSION_ID ?? "");

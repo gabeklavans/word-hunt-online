@@ -1,7 +1,5 @@
 import Phaser from "phaser";
 
-import UIPlugin from "phaser3-rex-plugins/templates/ui/ui-plugin";
-
 import PreloaderScene from "./scenes/PreloaderScene";
 import BoardScene from "./scenes/BoardScene";
 import SplashScene from "./scenes/SplashScene";
@@ -36,15 +34,6 @@ const config: Phaser.Types.Core.GameConfig = {
     scene: [PreloaderScene, BoardScene, SplashScene, ResultScene],
     // transparent: true,
     backgroundColor: "0xffffff",
-    plugins: {
-        scene: [
-            {
-                key: "rexUI",
-                plugin: UIPlugin,
-                mapping: "rexUI",
-            },
-        ],
-    },
 };
 
 export default new Phaser.Game(config);
