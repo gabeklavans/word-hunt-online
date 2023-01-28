@@ -3,87 +3,59 @@ import { SESSION_ID } from "../Main";
 import { getWordScore } from "../utils";
 import { isEqual } from "lodash";
 
-import {
-    ScrollablePanel,
-    RoundRectangle,
-    Sizer,
-    GridTable,
-} from "phaser3-rex-plugins/templates/ui/ui-components";
-
 export default class ResultScene extends Phaser.Scene {
     readonly FONT_SIZE = 30;
     readonly COLOR_PRIMARY = 0x4e342e;
     readonly COLOR_LIGHT = 0x7b5e57;
     readonly COLOR_DARK = 0x260e04;
+    readonly MAX_DISPLAYED_WORDS = 11;
 
-    doneButton!: Phaser.GameObjects.Rectangle;
+    padding!: number;
+
     resultRefreshTimer!: Phaser.Time.TimerEvent;
     waitTextTimer!: Phaser.Time.TimerEvent;
     waitingText!: Phaser.GameObjects.BitmapText;
+    curScoreStartIdx = 0;
+
+    doneButton!: Phaser.GameObjects.Rectangle;
+    leftangle!: Phaser.GameObjects.Rectangle;
+    rightangle!: Phaser.GameObjects.Rectangle;
+    prevScoresButton!: Phaser.GameObjects.Image;
+    nextScoresButton!: Phaser.GameObjects.Image;
+    textGroup!: Phaser.GameObjects.Group;
 
     session?: SessionView;
-    panel!: ScrollablePanel;
 
     constructor() {
         super({ key: "result", active: false });
     }
 
     async create() {
-        const track = new RoundRectangle(
-            this,
-            0,
-            0,
-            20,
-            10,
-            10,
-            this.COLOR_DARK
-        );
-        this.add.existing(track);
-        const thumb = new RoundRectangle(
-            this,
-            0,
-            0,
-            0,
-            0,
-            13,
-            this.COLOR_LIGHT
-        );
-        this.add.existing(thumb);
-        this.panel = new ScrollablePanel(this, {
-            x: 400,
-            y: 780,
-            width: 780,
+        const halfCanvasWidth = this.game.canvas.width / 2;
+        this.padding = halfCanvasWidth * 0.1;
 
-            scrollMode: 1,
+        const topPanelHeight = this.game.canvas.height * 0.04;
+        const bottomPanelHeight = this.game.canvas.height * 0.08;
 
-            panel: {
-                child: this.createScrollPanel(),
-            },
+        this.textGroup = this.add.group();
 
-            slider: {
-                track,
-                thumb,
-            },
-        })
-            .setOrigin(0.5, 1)
-            .layout();
-        this.add.existing(this.panel);
-
-        this.waitingText = this.add
-            .bitmapText(
-                this.cameras.main.centerX,
-                40,
-                "gothic",
-                "Waiting for results",
-                30
-            )
-            .setTintFill(0x000000)
-            .setOrigin(0.5)
-            .setDepth(2);
+        /******** Status text ********/
         let numDots = 0;
 
         const res = await getSessionInfo(SESSION_ID ?? "");
         this.session = await res.json();
+
+        this.waitingText = this.add
+            .bitmapText(
+                this.cameras.main.centerX,
+                this.padding / 2,
+                "gothic",
+                "Waiting for results",
+                topPanelHeight
+            )
+            .setTintFill(0x000000)
+            .setOrigin(0.5, 0)
+            .setDepth(2);
 
         if (!this.session?.done) {
             this.resultRefreshTimer = this.time.addEvent({
@@ -109,151 +81,70 @@ export default class ResultScene extends Phaser.Scene {
             this.waitingText.setText("Results!");
         }
 
-        this.displayScores();
+        /******** Score cards ********/
+        const cardWidth = halfCanvasWidth - this.padding * 1.5;
+        const cardHeight =
+            this.game.canvas.height -
+            this.padding * 2 -
+            (bottomPanelHeight + this.padding * 2) -
+            topPanelHeight;
 
-        // const buttonContainer = this.add.container(
-        //     this.cameras.main.centerX,
-        //     Math.floor(this.cameras.main.height * 0.75)
-        // );
-        // buttonContainer.add(
-        //     this.add
-        //         .rectangle(
-        //             0,
-        //             0,
-        //             this.cameras.main.width * 0.3,
-        //             this.cameras.main.height * 0.1,
-        //             GOOD_COLOR
-        //         )
-        //         .setInteractive()
-        //         .on("pointerdown", this.doneButtonHandler, this)
-        // );
-        // buttonContainer.add(
-        //     this.add
-        //         .text(0, 0, "Exit", {
-        //             fontSize: `${this.cameras.main.height * 0.07}px`,
-        //             color: "black",
-        //         })
-        //         .setOrigin(0.5)
-        // );
+        this.leftangle = this.add
+            .rectangle(
+                this.padding,
+                this.padding + topPanelHeight,
+                cardWidth,
+                cardHeight,
+                this.COLOR_LIGHT
+            )
+            .setOrigin(0);
+
+        this.rightangle = this.add
+            .rectangle(
+                this.game.canvas.width / 2 + this.padding / 2,
+                this.padding + topPanelHeight,
+                cardWidth,
+                cardHeight,
+                this.COLOR_LIGHT
+            )
+            .setOrigin(0);
+
+        /******** Arrows ********/
+        this.prevScoresButton = this.add
+            .image(
+                halfCanvasWidth - this.padding,
+                this.game.canvas.height - this.padding,
+                "arrow-right"
+            )
+            .setOrigin(1, 1)
+            .setDisplaySize(bottomPanelHeight * 2, bottomPanelHeight * 1.5)
+            .setFlipX(true)
+            .setInteractive()
+            .on("pointerdown", () => {
+                this.decCurScoreStart();
+                this.displayScores(this.curScoreStartIdx);
+            });
+
+        this.nextScoresButton = this.add
+            .image(
+                halfCanvasWidth + this.padding,
+                this.game.canvas.height - this.padding,
+                "arrow-right"
+            )
+            .setOrigin(0, 1)
+            .setDisplaySize(bottomPanelHeight * 2, bottomPanelHeight * 1.5)
+            .setInteractive()
+            .on("pointerdown", () => {
+                this.incCurScoreStart();
+                this.displayScores(this.curScoreStartIdx);
+            });
+
+        this.displayScores(0);
     }
 
     // doneButtonHandler() {
     //     window.close();
     // }
-
-    createScoreRow(
-        word?: Phaser.GameObjects.Text,
-        score?: Phaser.GameObjects.Text,
-        bg?: RoundRectangle
-    ) {
-        const background = bg ?? new RoundRectangle(this, 0, 0, 20, 20, 0);
-        this.add.existing(background);
-
-        const wordText =
-            word ?? this.add.text(0, 0, "").setFontSize(this.FONT_SIZE);
-        const scoreText =
-            score ?? this.add.text(0, 0, "").setFontSize(this.FONT_SIZE);
-
-        const sizer = new Sizer(this, {
-            width: 260, // parent panel width - padding
-            height: background.displayHeight,
-            orientation: "x",
-        })
-            .addBackground(background)
-            .add(wordText, 0, "center", { left: 10 }, false, "word")
-            .addSpace()
-            .add(scoreText, 0, "center", { right: 10 }, false, "score");
-        this.add.existing(sizer);
-        return sizer;
-    }
-
-    createScoreCard(userName: string, score: string, wordScores?: WordScore[]) {
-        const background = new RoundRectangle(
-            this,
-            0,
-            0,
-            300,
-            600,
-            15,
-            this.COLOR_PRIMARY
-        );
-        this.add.existing(background);
-
-        const headerBg = new RoundRectangle(
-            this,
-            0,
-            0,
-            20,
-            40,
-            0,
-            this.COLOR_DARK
-        );
-        this.add.existing(headerBg);
-
-        const gridTable = new GridTable(this, {
-            x: 0,
-            y: 0,
-            width: background.displayWidth,
-            height: background.displayHeight,
-            scrollMode: 0,
-            background,
-            header: this.createScoreRow(
-                this.add
-                    .text(0, 0, userName)
-                    .setFontSize(this.FONT_SIZE)
-                    .setStroke("white", 1),
-                this.add
-                    .text(0, 0, score)
-                    .setFontSize(this.FONT_SIZE)
-                    .setStroke("white", 1),
-                headerBg
-            ),
-            // TODO: Add "scroll for more" footer maybe
-            table: {
-                cellHeight: 30,
-                columns: 1,
-                mask: {
-                    padding: 2,
-                },
-                reuseCellContainer: true,
-            },
-            space: {
-                left: 20,
-                right: 20,
-                top: 20,
-                bottom: 20,
-
-                table: 10,
-                header: 10,
-            },
-            createCellContainerCallback: (cell, cellContainer: any) => {
-                const item = cell.item as WordScore;
-                if (!cellContainer) {
-                    cellContainer = this.createScoreRow();
-                    console.log(cell.index + ": create new cell-container");
-                } else {
-                    console.log(cell.index + ": reuse cell-container");
-                }
-
-                cellContainer.getElement("word").setText(item.word);
-                cellContainer.getElement("score").setText(item.score);
-                return cellContainer;
-            },
-            items: wordScores ?? [],
-        });
-
-        return gridTable;
-    }
-
-    createScrollPanel() {
-        const panel = new Sizer(this, {
-            orientation: "x",
-            space: { item: 50, top: 20, bottom: 20 },
-        });
-        this.add.existing(panel);
-
-        return panel;
-    }
 
     async checkForUpdatedSession() {
         const res = await getSessionInfo(SESSION_ID ?? "");
@@ -269,33 +160,90 @@ export default class ResultScene extends Phaser.Scene {
         }
     }
 
-    displayScores() {
+    decCurScoreStart(): void {
+        this.curScoreStartIdx = Math.max(0, this.curScoreStartIdx - 1);
+    }
+
+    incCurScoreStart(): void {
+        if (!this.session) {
+            console.warn(
+                "Tried to change pages with out session initialized..."
+            );
+            return;
+        }
+
+        this.curScoreStartIdx = Math.min(
+            Math.max(0, Object.values(this.session.scoredUsers).length - 1),
+            this.curScoreStartIdx + 1
+        );
+    }
+
+    displayScores(startIdx: number) {
         if (!this.session) {
             console.error("Session not initialized yet!");
             return;
         }
 
-        for (const scoredUser of Object.values(this.session.scoredUsers)) {
-            const wordScores = scoredUser.words
-                .map((word) => {
-                    return { word: word, score: getWordScore(word).toString() };
-                })
-                .sort(this.sortWordScores);
-            (
-                this.panel.getElement("panel") as Phaser.GameObjects.Container
-            ).add(
-                this.createScoreCard(
-                    scoredUser.name,
-                    scoredUser.score?.toString() ?? "waiting...",
-                    wordScores
-                )
-            );
-            this.panel.layout();
-        }
+        this.textGroup.destroy(true, true);
+        this.textGroup = this.add.group();
+
+        Object.values(this.session.scoredUsers)
+            .sort(this.sortScores)
+            .slice(startIdx, startIdx + 2)
+            .forEach((wordScore, idx) => {
+                const targetCard = [this.leftangle, this.rightangle][idx];
+
+                const nameText = this.add
+                    .bitmapText(0, 0, "gothic", [
+                        wordScore.name,
+                        wordScore.score?.toString() ?? "waiting...",
+                    ])
+                    .setCenterAlign()
+                    .setFontSize(this.FONT_SIZE);
+                this.textGroup.add(nameText);
+
+                Phaser.Display.Align.In.TopCenter(
+                    nameText,
+                    targetCard,
+                    undefined,
+                    -10
+                );
+
+                const wordScores = wordScore.words
+                    .map((word) => {
+                        return {
+                            word: word,
+                            score: getWordScore(word).toString(),
+                        };
+                    })
+                    .sort(this.sortWordScores)
+                    .slice(0, this.MAX_DISPLAYED_WORDS);
+
+                const scoreTexts = this.add
+                    .bitmapText(
+                        0,
+                        0,
+                        "gothic",
+                        wordScores.map(
+                            (wScore) => `${wScore.word}  -  ${wScore.score}`
+                        ),
+                        this.FONT_SIZE
+                    )
+                    .setLeftAlign();
+                this.textGroup.add(scoreTexts);
+
+                Phaser.Display.Align.To.BottomLeft(
+                    scoreTexts,
+                    nameText,
+                    undefined,
+                    this.padding / 2
+                );
+                scoreTexts.setX(targetCard.x + this.padding / 2);
+            });
     }
 
     sortWordScores(a: WordScore, b: WordScore) {
-        // descending score order else ascending albabetical order
+        // descending score order else ascending alphabetical order
         const aScore = parseInt(a.score) ?? Number.MIN_SAFE_INTEGER;
         const bScore = parseInt(b.score) ?? Number.MIN_SAFE_INTEGER;
         if (aScore !== bScore) {
@@ -303,5 +251,13 @@ export default class ResultScene extends Phaser.Scene {
         } else {
             return a.word.localeCompare(b.word);
         }
+    }
+
+    sortScores(a: Scores, b: Scores) {
+        if (!a.score && !b.score) return 0;
+        else if (!a.score) return 1;
+        else if (!b.score) return -1;
+
+        return b.score - a.score;
     }
 }

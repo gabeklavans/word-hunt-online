@@ -5,6 +5,7 @@ export default class Preloader extends Phaser.Scene {
 
     preload(): void {
         this.load.image("acho", "assets/acho.png");
+        this.load.image("arrow-right", "assets/arrow.png");
         this.load.bitmapFont(
             "gothic",
             "https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/assets/fonts/gothic.png",
@@ -19,7 +20,7 @@ export default class Preloader extends Phaser.Scene {
         graphics.fillRoundedRect(10, 10, 180, 180, 32);
         graphics.generateTexture("tile", 200, 200);
         
-        // this is toally me when I force the site to load this font
+        // this is totally me when I force the site to load this font
         this.add.text(0, 0, "loading...", {
             fontFamily: "Interstate",
         });

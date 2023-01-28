@@ -5,9 +5,10 @@ module.exports = {
     plugins: ["@typescript-eslint"],
     extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
     rules: {
-        semi: ["error", "always"],
+        semi: ["warn", "always"],
         curly: 0,
-        "@typescript-eslint/no-unused-vars": 2,
+        "@typescript-eslint/no-unused-vars": "warn",
+        "prefer-const": "warn",
         "@typescript-eslint/no-non-null-assertion": 1,
         eqeqeq: [1, "smart"],
     },
