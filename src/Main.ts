@@ -5,7 +5,7 @@ import BoardScene from "./scenes/BoardScene";
 import SplashScene from "./scenes/SplashScene";
 import ResultScene from "./scenes/ResultScene";
 
-export const DEBUG = true;
+export const DEBUG = false;
 export const BAD_COLOR = 0xff0000;
 export const GOOD_COLOR = 0x00ff00;
 
