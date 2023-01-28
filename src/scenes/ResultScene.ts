@@ -21,6 +21,9 @@ export default class ResultScene extends Phaser.Scene {
     waitTextTimer!: Phaser.Time.TimerEvent;
     waitingText!: Phaser.GameObjects.BitmapText;
 
+    prevScoresButton!: Phaser.GameObjects.Image;
+    nextScoresButton!: Phaser.GameObjects.Image;
+
     session?: SessionView;
     panel!: ScrollablePanel;
 
@@ -29,61 +32,30 @@ export default class ResultScene extends Phaser.Scene {
     }
 
     async create() {
-        const track = new RoundRectangle(
-            this,
-            0,
-            0,
-            20,
-            10,
-            10,
-            this.COLOR_DARK
-        );
-        this.add.existing(track);
-        const thumb = new RoundRectangle(
-            this,
-            0,
-            0,
-            0,
-            0,
-            13,
-            this.COLOR_LIGHT
-        );
-        this.add.existing(thumb);
-        this.panel = new ScrollablePanel(this, {
-            x: 400,
-            y: 780,
-            width: 780,
+        const halfCanvasWidth = this.game.canvas.width / 2;
+        const halfCanvasHeight = this.game.canvas.height / 2;
+        const padding = halfCanvasWidth * 0.1;
 
-            scrollMode: 1,
+        const topPanelHeight = this.game.canvas.height * 0.04;
+        const bottomPanelHeight = this.game.canvas.height * 0.08;
 
-            panel: {
-                child: this.createScrollPanel(),
-            },
-
-            slider: {
-                track,
-                thumb,
-            },
-        })
-            .setOrigin(0.5, 1)
-            .layout();
-        this.add.existing(this.panel);
-
-        this.waitingText = this.add
-            .bitmapText(
-                this.cameras.main.centerX,
-                40,
-                "gothic",
-                "Waiting for results",
-                30
-            )
-            .setTintFill(0x000000)
-            .setOrigin(0.5)
-            .setDepth(2);
+        /******** Status text ********/
         let numDots = 0;
 
         const res = await getSessionInfo(SESSION_ID ?? "");
         this.session = await res.json();
+
+        this.waitingText = this.add
+            .bitmapText(
+                this.cameras.main.centerX,
+                padding / 2, // fun lil hack
+                "gothic",
+                "Waiting for results",
+                topPanelHeight
+            )
+            .setTintFill(0x000000)
+            .setOrigin(0.5, 0)
+            .setDepth(2);
 
         if (!this.session?.done) {
             this.resultRefreshTimer = this.time.addEvent({
@@ -109,32 +81,59 @@ export default class ResultScene extends Phaser.Scene {
             this.waitingText.setText("Results!");
         }
 
-        this.displayScores();
+        /******** Score cards ********/
+        const cardWidth = halfCanvasWidth - padding * 1.5;
+        const cardHeight =
+            this.game.canvas.height -
+            padding * 2 -
+            (bottomPanelHeight + padding * 2) -
+            topPanelHeight;
 
-        // const buttonContainer = this.add.container(
-        //     this.cameras.main.centerX,
-        //     Math.floor(this.cameras.main.height * 0.75)
-        // );
-        // buttonContainer.add(
-        //     this.add
-        //         .rectangle(
-        //             0,
-        //             0,
-        //             this.cameras.main.width * 0.3,
-        //             this.cameras.main.height * 0.1,
-        //             GOOD_COLOR
-        //         )
-        //         .setInteractive()
-        //         .on("pointerdown", this.doneButtonHandler, this)
-        // );
-        // buttonContainer.add(
-        //     this.add
-        //         .text(0, 0, "Exit", {
-        //             fontSize: `${this.cameras.main.height * 0.07}px`,
-        //             color: "black",
-        //         })
-        //         .setOrigin(0.5)
-        // );
+        this.add
+            .rectangle(
+                padding,
+                padding + topPanelHeight,
+                cardWidth,
+                cardHeight,
+                this.COLOR_LIGHT
+            )
+            .setOrigin(0, 0);
+
+        this.add
+            .rectangle(
+                this.game.canvas.width - padding,
+                padding + topPanelHeight,
+                cardWidth,
+                cardHeight,
+                this.COLOR_LIGHT
+            )
+            .setOrigin(1, 0);
+
+        /******** Arrows ********/
+        this.prevScoresButton = this.add
+            .image(
+                halfCanvasWidth - padding,
+                this.game.canvas.height - padding,
+                "arrow-right"
+            )
+            .setOrigin(1, 1)
+            .setDisplaySize(bottomPanelHeight * 2, bottomPanelHeight * 1.5)
+            .setFlipX(true)
+            .setInteractive()
+            .on("pointerdown", console.log);
+
+        this.nextScoresButton = this.add
+            .image(
+                halfCanvasWidth + padding,
+                this.game.canvas.height - padding,
+                "arrow-right"
+            )
+            .setOrigin(0, 1)
+            .setDisplaySize(bottomPanelHeight * 2, bottomPanelHeight * 1.5)
+            .setInteractive()
+            .on("pointerdown", console.log);
+
+        this.displayScores();
     }
 
     // doneButtonHandler() {
@@ -269,12 +268,15 @@ export default class ResultScene extends Phaser.Scene {
         }
     }
 
-    displayScores() {
+    displayScores(startIdx: number) {
         if (!this.session) {
             console.error("Session not initialized yet!");
             return;
         }
 
+        // const [leftUser, rightUser] = Object.values(
+        //     this.session.scoredUsers
+        // ).slice(startIdx, startIdx + 2);
         for (const scoredUser of Object.values(this.session.scoredUsers)) {
             const wordScores = scoredUser.words
                 .map((word) => {
