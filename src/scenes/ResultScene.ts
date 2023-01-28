@@ -1,7 +1,7 @@
 import { getSessionInfo } from "../api";
 import { SESSION_ID } from "../Main";
 import { getWordScore } from "../utils";
-import { isEqual } from "lodash";
+import { ceil, isEqual } from "lodash";
 
 import {
     ScrollablePanel,
@@ -15,12 +15,17 @@ export default class ResultScene extends Phaser.Scene {
     readonly COLOR_PRIMARY = 0x4e342e;
     readonly COLOR_LIGHT = 0x7b5e57;
     readonly COLOR_DARK = 0x260e04;
+    readonly MAX_DISPLAYED_WORDS = 11;
 
     doneButton!: Phaser.GameObjects.Rectangle;
     resultRefreshTimer!: Phaser.Time.TimerEvent;
     waitTextTimer!: Phaser.Time.TimerEvent;
     waitingText!: Phaser.GameObjects.BitmapText;
 
+    padding!: number;
+
+    leftangle!: Phaser.GameObjects.Rectangle;
+    rightangle!: Phaser.GameObjects.Rectangle;
     prevScoresButton!: Phaser.GameObjects.Image;
     nextScoresButton!: Phaser.GameObjects.Image;
 
@@ -34,7 +39,7 @@ export default class ResultScene extends Phaser.Scene {
     async create() {
         const halfCanvasWidth = this.game.canvas.width / 2;
         const halfCanvasHeight = this.game.canvas.height / 2;
-        const padding = halfCanvasWidth * 0.1;
+        this.padding = halfCanvasWidth * 0.1;
 
         const topPanelHeight = this.game.canvas.height * 0.04;
         const bottomPanelHeight = this.game.canvas.height * 0.08;
@@ -48,7 +53,7 @@ export default class ResultScene extends Phaser.Scene {
         this.waitingText = this.add
             .bitmapText(
                 this.cameras.main.centerX,
-                padding / 2, // fun lil hack
+                this.padding / 2, // fun lil hack
                 "gothic",
                 "Waiting for results",
                 topPanelHeight
@@ -82,38 +87,38 @@ export default class ResultScene extends Phaser.Scene {
         }
 
         /******** Score cards ********/
-        const cardWidth = halfCanvasWidth - padding * 1.5;
+        const cardWidth = halfCanvasWidth - this.padding * 1.5;
         const cardHeight =
             this.game.canvas.height -
-            padding * 2 -
-            (bottomPanelHeight + padding * 2) -
+            this.padding * 2 -
+            (bottomPanelHeight + this.padding * 2) -
             topPanelHeight;
 
-        this.add
+        this.leftangle = this.add
             .rectangle(
-                padding,
-                padding + topPanelHeight,
+                this.padding,
+                this.padding + topPanelHeight,
                 cardWidth,
                 cardHeight,
                 this.COLOR_LIGHT
             )
-            .setOrigin(0, 0);
+            .setOrigin(0);
 
-        this.add
+        this.rightangle = this.add
             .rectangle(
-                this.game.canvas.width - padding,
-                padding + topPanelHeight,
+                this.game.canvas.width / 2 + this.padding / 2,
+                this.padding + topPanelHeight,
                 cardWidth,
                 cardHeight,
                 this.COLOR_LIGHT
             )
-            .setOrigin(1, 0);
+            .setOrigin(0);
 
         /******** Arrows ********/
         this.prevScoresButton = this.add
             .image(
-                halfCanvasWidth - padding,
-                this.game.canvas.height - padding,
+                halfCanvasWidth - this.padding,
+                this.game.canvas.height - this.padding,
                 "arrow-right"
             )
             .setOrigin(1, 1)
@@ -124,8 +129,8 @@ export default class ResultScene extends Phaser.Scene {
 
         this.nextScoresButton = this.add
             .image(
-                halfCanvasWidth + padding,
-                this.game.canvas.height - padding,
+                halfCanvasWidth + this.padding,
+                this.game.canvas.height - this.padding,
                 "arrow-right"
             )
             .setOrigin(0, 1)
@@ -133,7 +138,7 @@ export default class ResultScene extends Phaser.Scene {
             .setInteractive()
             .on("pointerdown", console.log);
 
-        this.displayScores();
+        this.displayScores(0);
     }
 
     // doneButtonHandler() {
@@ -154,7 +159,7 @@ export default class ResultScene extends Phaser.Scene {
             score ?? this.add.text(0, 0, "").setFontSize(this.FONT_SIZE);
 
         const sizer = new Sizer(this, {
-            width: 260, // parent panel width - padding
+            width: 260, // parent panel width - this.padding
             height: background.displayHeight,
             orientation: "x",
         })
@@ -274,26 +279,65 @@ export default class ResultScene extends Phaser.Scene {
             return;
         }
 
-        // const [leftUser, rightUser] = Object.values(
-        //     this.session.scoredUsers
-        // ).slice(startIdx, startIdx + 2);
-        for (const scoredUser of Object.values(this.session.scoredUsers)) {
-            const wordScores = scoredUser.words
-                .map((word) => {
-                    return { word: word, score: getWordScore(word).toString() };
-                })
-                .sort(this.sortWordScores);
-            (
-                this.panel.getElement("panel") as Phaser.GameObjects.Container
-            ).add(
-                this.createScoreCard(
-                    scoredUser.name,
-                    scoredUser.score?.toString() ?? "waiting...",
-                    wordScores
-                )
-            );
-            this.panel.layout();
-        }
+        Object.values(this.session.scoredUsers)
+            .sort((wScoreA, wScoreB) => {
+                if (!wScoreA.score && !wScoreB.score) return 0;
+                else if (!wScoreA.score) return 1;
+                else if (!wScoreB.score) return -1;
+
+                return wScoreB.score - wScoreA.score;
+            })
+            .slice(startIdx, startIdx + 2)
+            .forEach((wordScore, idx) => {
+                const targetCard = [this.leftangle, this.rightangle][idx];
+
+                const nameText = this.add
+                    .bitmapText(0, 0, "gothic", [
+                        wordScore.name,
+                        wordScore.score?.toString() ?? "waiting...",
+                    ])
+                    .setCenterAlign()
+                    .setFontSize(this.FONT_SIZE);
+
+                Phaser.Display.Align.In.TopCenter(
+                    nameText,
+                    targetCard,
+                    undefined,
+                    -10
+                );
+
+                const wordScores = wordScore.words
+                    .map((word) => {
+                        return {
+                            word: word,
+                            score: getWordScore(word).toString(),
+                        };
+                    })
+                    .sort(this.sortWordScores)
+                    .slice(0, this.MAX_DISPLAYED_WORDS);
+
+                const scoreTexts = this.add
+                    .bitmapText(
+                        0,
+                        0,
+                        "gothic",
+                        wordScores.map(
+                            (wScore) => `${wScore.word}  -  ${wScore.score}`
+                        ),
+                        this.FONT_SIZE
+                    )
+                    .setLeftAlign();
+
+                console.log(scoreTexts.originX);
+
+                Phaser.Display.Align.To.BottomLeft(
+                    scoreTexts,
+                    nameText,
+                    undefined,
+                    this.padding / 2
+                );
+                scoreTexts.setX(targetCard.x + this.padding / 2);
+            });
     }
 
     sortWordScores(a: WordScore, b: WordScore) {
