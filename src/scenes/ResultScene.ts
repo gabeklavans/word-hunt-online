@@ -10,17 +10,19 @@ export default class ResultScene extends Phaser.Scene {
     readonly COLOR_DARK = 0x260e04;
     readonly MAX_DISPLAYED_WORDS = 11;
 
-    doneButton!: Phaser.GameObjects.Rectangle;
+    padding!: number;
+
     resultRefreshTimer!: Phaser.Time.TimerEvent;
     waitTextTimer!: Phaser.Time.TimerEvent;
     waitingText!: Phaser.GameObjects.BitmapText;
+    curScoreStartIdx = 0;
 
-    padding!: number;
-
+    doneButton!: Phaser.GameObjects.Rectangle;
     leftangle!: Phaser.GameObjects.Rectangle;
     rightangle!: Phaser.GameObjects.Rectangle;
     prevScoresButton!: Phaser.GameObjects.Image;
     nextScoresButton!: Phaser.GameObjects.Image;
+    textGroup!: Phaser.GameObjects.Group;
 
     session?: SessionView;
 
@@ -30,11 +32,12 @@ export default class ResultScene extends Phaser.Scene {
 
     async create() {
         const halfCanvasWidth = this.game.canvas.width / 2;
-        const halfCanvasHeight = this.game.canvas.height / 2;
         this.padding = halfCanvasWidth * 0.1;
 
         const topPanelHeight = this.game.canvas.height * 0.04;
         const bottomPanelHeight = this.game.canvas.height * 0.08;
+
+        this.textGroup = this.add.group();
 
         /******** Status text ********/
         let numDots = 0;
@@ -45,7 +48,7 @@ export default class ResultScene extends Phaser.Scene {
         this.waitingText = this.add
             .bitmapText(
                 this.cameras.main.centerX,
-                this.padding / 2, // fun lil hack
+                this.padding / 2,
                 "gothic",
                 "Waiting for results",
                 topPanelHeight
@@ -117,7 +120,10 @@ export default class ResultScene extends Phaser.Scene {
             .setDisplaySize(bottomPanelHeight * 2, bottomPanelHeight * 1.5)
             .setFlipX(true)
             .setInteractive()
-            .on("pointerdown", console.log);
+            .on("pointerdown", () => {
+                this.decCurScoreStart();
+                this.displayScores(this.curScoreStartIdx);
+            });
 
         this.nextScoresButton = this.add
             .image(
@@ -128,7 +134,10 @@ export default class ResultScene extends Phaser.Scene {
             .setOrigin(0, 1)
             .setDisplaySize(bottomPanelHeight * 2, bottomPanelHeight * 1.5)
             .setInteractive()
-            .on("pointerdown", console.log);
+            .on("pointerdown", () => {
+                this.incCurScoreStart();
+                this.displayScores(this.curScoreStartIdx);
+            });
 
         this.displayScores(0);
     }
@@ -151,11 +160,32 @@ export default class ResultScene extends Phaser.Scene {
         }
     }
 
+    decCurScoreStart(): void {
+        this.curScoreStartIdx = Math.max(0, this.curScoreStartIdx - 1);
+    }
+
+    incCurScoreStart(): void {
+        if (!this.session) {
+            console.warn(
+                "Tried to change pages with out session initialized..."
+            );
+            return;
+        }
+
+        this.curScoreStartIdx = Math.min(
+            Math.max(0, Object.values(this.session.scoredUsers).length - 1),
+            this.curScoreStartIdx + 1
+        );
+    }
+
     displayScores(startIdx: number) {
         if (!this.session) {
             console.error("Session not initialized yet!");
             return;
         }
+
+        this.textGroup.destroy(true, true);
+        this.textGroup = this.add.group();
 
         Object.values(this.session.scoredUsers)
             .sort(this.sortScores)
@@ -170,6 +200,7 @@ export default class ResultScene extends Phaser.Scene {
                     ])
                     .setCenterAlign()
                     .setFontSize(this.FONT_SIZE);
+                this.textGroup.add(nameText);
 
                 Phaser.Display.Align.In.TopCenter(
                     nameText,
@@ -199,6 +230,7 @@ export default class ResultScene extends Phaser.Scene {
                         this.FONT_SIZE
                     )
                     .setLeftAlign();
+                this.textGroup.add(scoreTexts);
 
                 Phaser.Display.Align.To.BottomLeft(
                     scoreTexts,
