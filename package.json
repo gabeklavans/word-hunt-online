@@ -4,7 +4,7 @@
     "description": "Word Hunt Online",
     "main": "src/main.ts",
     "scripts": {
-        "start": "snowpack dev",
+        "dev": "snowpack dev",
         "prebuild": "tsc && npm run lint",
         "build": "snowpack build",
         "lint": "eslint . --ext .ts",
