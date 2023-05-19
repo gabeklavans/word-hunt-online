@@ -1,5 +1,6 @@
-import { BAD_COLOR, GOOD_COLOR, IS_SPECTATE } from "../Main";
+import { BAD_COLOR, GOOD_COLOR, IS_SPECTATE, SESSION_ID, USER_ID } from "../Main";
 import eventsCenter, { WHOEvents } from "../WHOEvents";
+import { notifyPlayerStarted } from "../api";
 
 export default class SplashScene extends Phaser.Scene {
     boardDone = false;
@@ -70,8 +71,10 @@ export default class SplashScene extends Phaser.Scene {
         }
     }
 
-    startButtonHandler() {
+    async startButtonHandler() {
         eventsCenter.emit(WHOEvents.GameStart);
+        // TODO: null handle
+        await notifyPlayerStarted(SESSION_ID as string, USER_ID as string);
         this.scene.stop();
     }
 

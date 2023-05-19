@@ -58,7 +58,8 @@ export default class BoardScene extends Phaser.Scene {
         // get a board from API
         console.log(SESSION_ID);
 
-        const response = await getBoardData(SESSION_ID ?? "");
+        // TODO: null handle
+        const response = await getBoardData(SESSION_ID as string);
         const boardData: BoardData = await response.json();
         if (DEBUG) {
             console.log("Board data:");

@@ -24,7 +24,7 @@ export async function sendResults(
         return await fetch(`${SERVER_URL}/result/${sessionId}/${userId}`, {
             method: "POST",
             headers: {
-                "Accept": "application/json",
+                Accept: "application/json",
                 "Content-Type": "application/json",
             },
             mode: "cors",
@@ -36,6 +36,22 @@ export async function sendResults(
             console.error(`userId: ${userId}`);
             console.error("data:");
             console.error(data);
+            console.error(error);
+        }
+    }
+}
+
+export async function notifyPlayerStarted(sessionId: string, userId: string) {
+    try {
+        return await fetch(`${SERVER_URL}/start-game/${sessionId}/${userId}`, {
+            method: "PATCH",
+            mode: "cors",
+        });
+    } catch (error) {
+        if (DEBUG) {
+            console.error(
+                `notifyPlayerStarted, sessionId: ${sessionId}, userId: ${userId}`
+            );
             console.error(error);
         }
     }
