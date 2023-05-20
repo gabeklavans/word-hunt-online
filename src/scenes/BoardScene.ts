@@ -1,5 +1,6 @@
+import { DEBUG } from "../env";
 import eventsCenter, { WHOEvents } from "../WHOEvents";
-import { DEBUG, GOOD_COLOR, SESSION_ID, USER_ID } from "../Main";
+import { GOOD_COLOR, SESSION_ID, USER_ID } from "../Main";
 import { getWordScore, pointExitRect } from "../utils";
 import { getBoardData, sendResults } from "../api";
 
@@ -170,7 +171,7 @@ export default class BoardScene extends Phaser.Scene {
                         .text(0, 0, tile.letter.toUpperCase(), {
                             color: "black",
                             fontSize: `${this.LETTER_SPRITE_SIZE / 2}px`,
-                            fontFamily: "Interstate"
+                            fontFamily: "Interstate",
                         })
                         .setOrigin(0.5)
                 );

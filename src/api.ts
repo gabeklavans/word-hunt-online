@@ -1,5 +1,4 @@
-import { SERVER_URL } from "./env";
-import { DEBUG } from "./Main";
+import { SERVER_URL, DEBUG } from "./env";
 
 export async function getBoardData(sessionId: string) {
     return await fetch(`${SERVER_URL}/who/board/${sessionId}`, {
