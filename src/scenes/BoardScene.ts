@@ -12,6 +12,7 @@ export default class BoardScene extends Phaser.Scene {
     tileGrid: Tile[][] = [];
 
     currentChain: Tile[] = [];
+    chainLineGraphic!: Phaser.GameObjects.Graphics;
     foundWords: Set<string> = new Set();
 
     isDragging = false;
@@ -25,6 +26,13 @@ export default class BoardScene extends Phaser.Scene {
     readonly DRAG_COLOR = 0xf5c398;
     readonly REPEAT_COLOR = 0xeddf3e;
     readonly IDLE_COLOR = 0xad5100;
+    readonly NEUTRAL_LINE_COLOR = 0x7e7e7e;
+    readonly BAD_LINE_COLOR = 0xbc0000;
+
+    readonly LINE_THICKNESS = 10;
+
+    readonly LETTER_DEPTH = 50;
+    readonly CHAIN_LINE_DEPTH = 100;
 
     constructor() {
         super({ key: "board", visible: false });
@@ -55,6 +63,9 @@ export default class BoardScene extends Phaser.Scene {
         this.input.addListener("pointerup", () => {
             this.endChain();
         });
+        this.chainLineGraphic = this.add
+            .graphics()
+            .setDepth(this.CHAIN_LINE_DEPTH);
 
         // get a board from API
         console.log(SESSION_ID);
@@ -70,17 +81,17 @@ export default class BoardScene extends Phaser.Scene {
 
         // draw objects
         this.drawBoard(boardData.board);
-        console.log(this.tileGrid[0][0].container?.getBounds().y);
+        console.log(this.tileGrid[0][0].container.getBounds().y);
 
         this.gameTimeText = this.add
             .text(
                 this.cameras.main.centerX,
-                (this.tileGrid[0][0].container?.getBounds().y ?? 80) / 2,
+                (this.tileGrid[0][0].container.getBounds().y ?? 80) / 2,
                 "Time remaining:",
                 {
                     color: "black",
                     fontSize: `${Math.floor(
-                        (this.tileGrid[0][0].container?.getBounds().y ?? 80) / 2
+                        (this.tileGrid[0][0].container.getBounds().y ?? 80) / 2
                     )}px`,
                 }
             )
@@ -106,7 +117,7 @@ export default class BoardScene extends Phaser.Scene {
     updateChainColors(color: number) {
         this.currentChain.forEach((tile) =>
             (
-                tile.container?.getByName("image") as Phaser.GameObjects.Image
+                tile.container.getByName("image") as Phaser.GameObjects.Image
             ).setTint(color)
         );
     }
@@ -166,15 +177,17 @@ export default class BoardScene extends Phaser.Scene {
                 };
 
                 // draw on letters
-                tileContainer.add(
-                    this.add
-                        .text(0, 0, tile.letter.toUpperCase(), {
-                            color: "black",
-                            fontSize: `${this.LETTER_SPRITE_SIZE / 2}px`,
-                            fontFamily: "Interstate",
-                        })
-                        .setOrigin(0.5)
-                );
+                tileContainer
+                    .add(
+                        this.add
+                            .text(0, 0, tile.letter.toUpperCase(), {
+                                color: "black",
+                                fontSize: `${this.LETTER_SPRITE_SIZE / 2}px`,
+                                fontFamily: "Interstate",
+                            })
+                            .setOrigin(0.5)
+                    )
+                    .setDepth(this.LETTER_DEPTH);
 
                 // add to structs
                 this.tileGrid[row][col] = tile;
@@ -317,6 +330,17 @@ export default class BoardScene extends Phaser.Scene {
     addToChain(tile: Tile) {
         if (!this.currentChain.includes(tile)) {
             this.currentChain.push(tile);
+            this.drawChainLine();
+
+            this.tweens.add({
+                targets: tile.container,
+                props: {
+                    scaleX: { value: 1.1, duration: 100 },
+                    scaleY: { value: 1.1, duration: 100 },
+                },
+                ease: Phaser.Math.Easing.Bounce.Out,
+                paused: false,
+            });
 
             const word = this.currentChain.map((tile) => tile.letter).join("");
             if (this.foundWords.has(word)) {
@@ -327,6 +351,32 @@ export default class BoardScene extends Phaser.Scene {
                 this.updateChainColors(this.DRAG_COLOR);
             }
         }
+    }
+
+    drawChainLine() {
+        this.chainLineGraphic.clear();
+        this.chainLineGraphic.lineStyle(this.LINE_THICKNESS, this.NEUTRAL_LINE_COLOR);
+        this.chainLineGraphic.fillStyle(this.NEUTRAL_LINE_COLOR);
+        this.chainLineGraphic.setBlendMode(Phaser.BlendModes.DIFFERENCE);
+
+        let prevTile: Tile;
+        this.currentChain.forEach((tile) => {
+            if (prevTile) {
+                this.chainLineGraphic.lineBetween(
+                    prevTile.container.x,
+                    prevTile.container.y,
+                    tile.container.x,
+                    tile.container.y
+                );
+            }
+
+            this.chainLineGraphic.fillCircle(
+                tile.container.x,
+                tile.container.y,
+                this.LINE_THICKNESS / 2
+            );
+            prevTile = tile;
+        });
     }
 
     endChain() {
@@ -352,6 +402,17 @@ export default class BoardScene extends Phaser.Scene {
             this.currentChain = [];
         }
         this.isDragging = false;
+        this.chainLineGraphic.clear();
+        this.tweens.killAll();
+        this.tweens.add({
+            targets: this.tileContainerGroup.getChildren(),
+            props: {
+                scaleX: { value: 1.0, duration: 75 },
+                scaleY: { value: 1.0, duration: 75 },
+            },
+            ease: Phaser.Math.Easing.Linear,
+            paused: false,
+        });
         console.log(`cur score: ${this.curScore}`);
     }
 }
