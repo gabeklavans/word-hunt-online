@@ -63,9 +63,7 @@ export default class BoardScene extends Phaser.Scene {
         this.input.addListener("pointerup", () => {
             this.endChain();
         });
-        this.chainLineGraphic = this.add
-            .graphics()
-            .setDepth(this.CHAIN_LINE_DEPTH);
+        this.chainLineGraphic = this.add.graphics().setDepth(this.CHAIN_LINE_DEPTH);
 
         // get a board from API
         console.log(SESSION_ID);
@@ -99,9 +97,7 @@ export default class BoardScene extends Phaser.Scene {
             .setVisible(false);
 
         if (DEBUG) {
-            this.gameTimeText
-                .setInteractive()
-                .on("pointerdown", this.handleGameEnd, this);
+            this.gameTimeText.setInteractive().on("pointerdown", this.handleGameEnd, this);
         }
 
         this.imageGroup.setTint(this.IDLE_COLOR);
@@ -113,18 +109,14 @@ export default class BoardScene extends Phaser.Scene {
     update(): void {
         if (this.gameTimer && this.gameTimeText.visible) {
             this.gameTimeText.setText(
-                `Time remaining: ${Math.ceil(
-                    this.gameTimer.getRemainingSeconds()
-                )} seconds`
+                `Time remaining: ${Math.ceil(this.gameTimer.getRemainingSeconds())} seconds`
             );
         }
     }
 
     updateChainColors(color: number) {
         this.currentChain.forEach((tile) =>
-            (
-                tile.container.getByName("image") as Phaser.GameObjects.Image
-            ).setTint(color)
+            (tile.container.getByName("image") as Phaser.GameObjects.Image).setTint(color)
         );
     }
 
@@ -156,20 +148,15 @@ export default class BoardScene extends Phaser.Scene {
             for (let col = 0; col < this.GRID_SIZE; col++) {
                 const tileImage = this.add
                     .image(0, 0, "tile")
-                    .setDisplaySize(
-                        this.LETTER_SPRITE_SIZE,
-                        this.LETTER_SPRITE_SIZE
-                    )
+                    .setDisplaySize(this.LETTER_SPRITE_SIZE, this.LETTER_SPRITE_SIZE)
                     .setName("image");
                 const tileContainer = this.add
                     .container(
                         this.cameras.main.width / 2 +
-                            (col - this.GRID_SIZE / 2) *
-                                this.LETTER_SPRITE_SIZE +
+                            (col - this.GRID_SIZE / 2) * this.LETTER_SPRITE_SIZE +
                             this.LETTER_SPRITE_SIZE / 2,
                         this.cameras.main.height / 2 +
-                            (row - this.GRID_SIZE / 2) *
-                                this.LETTER_SPRITE_SIZE +
+                            (row - this.GRID_SIZE / 2) * this.LETTER_SPRITE_SIZE +
                             this.LETTER_SPRITE_SIZE / 2,
                         tileImage
                     )
@@ -203,11 +190,7 @@ export default class BoardScene extends Phaser.Scene {
                 // enable interactions
                 tileContainer
                     .setInteractive(
-                        new Phaser.Geom.Circle(
-                            0,
-                            0,
-                            tileImage.displayHeight / 2
-                        ),
+                        new Phaser.Geom.Circle(0, 0, tileImage.displayHeight / 2),
                         Phaser.Geom.Circle.Contains
                     )
                     .on("pointerover", () => {
@@ -253,9 +236,7 @@ export default class BoardScene extends Phaser.Scene {
             }
         } else {
             console.error("There was a timing issue...");
-            console.error(
-                "Bounding box tried to draw before top left container was defined"
-            );
+            console.error("Bounding box tried to draw before top left container was defined");
 
             // TODO: Replace with an error scene
             this.game.destroy(true, true);
@@ -307,10 +288,7 @@ export default class BoardScene extends Phaser.Scene {
                                     new Phaser.Geom.Circle(
                                         childContainer.x,
                                         childContainer.y,
-                                        (
-                                            childContainer.input
-                                                .hitArea as Phaser.Geom.Circle
-                                        ).radius
+                                        (childContainer.input.hitArea as Phaser.Geom.Circle).radius
                                     )
                                 )
                             ) {
@@ -361,10 +339,7 @@ export default class BoardScene extends Phaser.Scene {
 
     drawChainLine() {
         this.chainLineGraphic.clear();
-        this.chainLineGraphic.lineStyle(
-            this.LINE_THICKNESS,
-            this.NEUTRAL_LINE_COLOR
-        );
+        this.chainLineGraphic.lineStyle(this.LINE_THICKNESS, this.NEUTRAL_LINE_COLOR);
         this.chainLineGraphic.fillStyle(this.NEUTRAL_LINE_COLOR);
         this.chainLineGraphic.setBlendMode(Phaser.BlendModes.DIFFERENCE);
 
@@ -397,9 +372,7 @@ export default class BoardScene extends Phaser.Scene {
                 if (this.boardWords.has(word)) {
                     const wordScore = getWordScore(word);
                     if (DEBUG) {
-                        console.log(
-                            `Found word "${word}" of score: ${wordScore}`
-                        );
+                        console.log(`Found word "${word}" of score: ${wordScore}`);
                     }
                     this.curScore += wordScore;
                     this.foundWords.add(word);
