@@ -98,6 +98,12 @@ export default class BoardScene extends Phaser.Scene {
             .setOrigin(0.5)
             .setVisible(false);
 
+        if (DEBUG) {
+            this.gameTimeText
+                .setInteractive()
+                .on("pointerdown", this.handleGameEnd, this);
+        }
+
         this.imageGroup.setTint(this.IDLE_COLOR);
 
         // tell splash screen we've got a valid board
@@ -355,7 +361,10 @@ export default class BoardScene extends Phaser.Scene {
 
     drawChainLine() {
         this.chainLineGraphic.clear();
-        this.chainLineGraphic.lineStyle(this.LINE_THICKNESS, this.NEUTRAL_LINE_COLOR);
+        this.chainLineGraphic.lineStyle(
+            this.LINE_THICKNESS,
+            this.NEUTRAL_LINE_COLOR
+        );
         this.chainLineGraphic.fillStyle(this.NEUTRAL_LINE_COLOR);
         this.chainLineGraphic.setBlendMode(Phaser.BlendModes.DIFFERENCE);
 
