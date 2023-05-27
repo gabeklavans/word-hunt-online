@@ -7,7 +7,8 @@ import { getBoardData, sendResults } from "../api";
 export default class BoardScene extends Phaser.Scene {
 	imageGroup!: Phaser.GameObjects.Group;
 	tileContainerGroup!: Phaser.GameObjects.Group;
-	gameTimeText!: Phaser.GameObjects.Text;
+	gameTimeText!: Phaser.GameObjects.BitmapText;
+	gameTimeTextPrefix = "⏳";
 	gameTimer?: Phaser.Time.TimerEvent;
 	tileGrid: Tile[][] = [];
 
@@ -81,20 +82,19 @@ export default class BoardScene extends Phaser.Scene {
 		this.drawBoard(boardData.board);
 		console.log(this.tileGrid[0][0].container.getBounds().y);
 
+		const approxGameTimeTextLength = 10;
 		this.gameTimeText = this.add
-			.text(
+			.bitmapText(
 				this.cameras.main.centerX,
-				(this.tileGrid[0][0].container.getBounds().y ?? 80) / 2,
-				"Time remaining:",
-				{
-					color: "black",
-					fontSize: `${Math.floor(
-						(this.tileGrid[0][0].container.getBounds().y ?? 80) / 2
-					)}px`,
-				}
+				0,
+				"gothic",
+				this.gameTimeTextPrefix,
+				Math.floor(this.game.canvas.width / approxGameTimeTextLength)
 			)
-			.setOrigin(0.5)
-			.setVisible(false);
+			.setTintFill(0x000000)
+			.setOrigin(0.5, 0)
+			.setVisible(false)
+			.setDepth(2);
 
 		if (DEBUG) {
 			this.gameTimeText.setInteractive().on("pointerdown", this.handleGameEnd, this);
@@ -108,9 +108,8 @@ export default class BoardScene extends Phaser.Scene {
 
 	update(): void {
 		if (this.gameTimer && this.gameTimeText.visible) {
-			this.gameTimeText.setText(
-				`Time remaining: ${Math.ceil(this.gameTimer.getRemainingSeconds())} seconds`
-			);
+			const timeRemaining = Math.ceil(this.gameTimer.getRemainingSeconds());
+			this.gameTimeText.setText(`${timeRemaining}`);
 		}
 	}
 
