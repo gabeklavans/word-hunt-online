@@ -244,7 +244,7 @@ export default class ResultScene extends Phaser.Scene {
 		}
 	}
 
-	sortScores(a: Scores, b: Scores) {
+	sortScores(a: ScoredPlayer, b: ScoredPlayer) {
 		if (!a.score && !b.score) return 0;
 		else if (!a.score) return 1;
 		else if (!b.score) return -1;

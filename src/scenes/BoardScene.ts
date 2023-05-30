@@ -135,17 +135,17 @@ export default class BoardScene extends Phaser.Scene {
 		);
 	}
 
-	handleGameEnd() {
+	async handleGameEnd() {
 		if (DEBUG) {
 			console.debug("Game over!");
 		}
 		// send result to bot
-		sendResults(SESSION_ID ?? "", USER_ID ?? "", {
+		await sendResults(SESSION_ID ?? "", USER_ID ?? "", {
 			score: this.curScore,
 			words: Array.from(this.foundWords),
 		});
-		// TODO: make sure this doesn't cut off the fetch above
-		this.scene.switch("result");
+
+		window.location.href = `results.html?session=${SESSION_ID}&user=${USER_ID}`;
 	}
 
 	drawBoard(board: BoardLetters) {

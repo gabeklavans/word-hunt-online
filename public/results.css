@@ -1,0 +1,55 @@
+html {
+    font-family: "Interstate";
+}
+
+body {
+	margin: 0;
+}
+
+header {
+	height: 10vh;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+}
+
+h1,h2,h3,h4 {
+	text-align: center;
+    margin: 5px;
+}
+
+article {
+    padding: 0px 10px;
+    margin: 0px 5px;
+	background: lightsalmon;
+    height: 80vh;
+    min-width: 8em;
+    width: 40vw;
+    max-width: 15em;
+    display: flex;
+    flex-direction: column;
+}
+
+article > div {
+    padding: 0px 15px;
+    overflow: auto;
+}
+
+span {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: space-between;
+    font-size: small;
+}
+
+span > p {
+    margin: 0;
+    padding: 0;
+}
+
+section {
+	display: flex;
+    overflow: auto;
+    padding: 5px;
+}
