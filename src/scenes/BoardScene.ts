@@ -193,15 +193,16 @@ export default class BoardScene extends Phaser.Scene {
 				this.tileContainerGroup.add(tileContainer);
 
 				// enable hitboxes on tiles
-				const HITBOX_FEEL_ADJUST = -10;
+				const NUDGE = 2;
+				// NOTE: The Point coords are relative to the CENTER of the tile image
+				const topPoint = new Phaser.Geom.Point(0, -tileImage.displayHeight / 2 - NUDGE);
+				const rightPoint = new Phaser.Geom.Point(tileImage.displayWidth / 2 + NUDGE, 0);
+				const bottomPoint = new Phaser.Geom.Point(0, tileImage.displayHeight / 2 + NUDGE);
+				const leftPoint = new Phaser.Geom.Point(-tileImage.displayWidth / 2 - NUDGE, 0);
 				tileContainer
 					.setInteractive(
-						new Phaser.Geom.Circle(
-							0,
-							0,
-							tileImage.displayHeight / 2 + HITBOX_FEEL_ADJUST
-						),
-						Phaser.Geom.Circle.Contains
+						new Phaser.Geom.Polygon([topPoint, rightPoint, bottomPoint, leftPoint]),
+						Phaser.Geom.Polygon.Contains
 					)
 					.on("pointerover", () => {
 						this.handleAddToChain(tile);
@@ -277,42 +278,61 @@ export default class BoardScene extends Phaser.Scene {
 						tile.col
 					) > Math.sqrt(2)
 				) {
-					if (lastTileInChain.container && tile.container) {
-						// skipped tiles detected!
-						// draw a line and fill in the intersected tiles
-						const intersectLine = new Phaser.Geom.Line(
-							lastTileInChain.container.x,
-							lastTileInChain.container.y,
-							tile.container.x,
-							tile.container.y
-						);
-
-						// loop thru all the tiles' hitboxes and check for intersect,
-						// cause I can't figure out a better way to do it using Phaser...
-						for (const childTile of this.tileGrid.flat()) {
-							const childContainer =
-								childTile.container as Phaser.GameObjects.Container;
-							if (
-								Phaser.Geom.Intersects.LineToCircle(
-									intersectLine,
-									new Phaser.Geom.Circle(
-										childContainer.x,
-										childContainer.y,
-										(childContainer.input.hitArea as Phaser.Geom.Circle).radius
-									)
-								)
-							) {
-								this.addToChain(childTile);
-							}
-						}
-					} else {
+					if (!lastTileInChain.container || !tile.container) {
 						console.error("Containers not initialized");
 						// TODO: Error scene
 						this.game.destroy(true, true);
+						return;
 					}
+
+					if (DEBUG) {
+						console.debug("Skipped tile detected!");
+					}
+
+					// just skip this tile, wait for user to hit a valid one
+					return;
+
+					/**
+					 * NOTE: This auto-fill-skipped tiles code actually kinda works,
+					 * but it has weird edge-cases that I think are not worth trying
+					 * to figure out how to reconcile in an intuitive way.
+					 * Now you can peruse it as a relic of a forlorn idea.
+					 */
+					/*
+					// draw a line and fill in the intersected tiles
+					const intersectLine = new Phaser.Geom.Line(
+						lastTileInChain.container.x,
+						lastTileInChain.container.y,
+						tile.container.x,
+						tile.container.y
+					);
+					console.log([intersectLine.getPointA(), intersectLine.getPointB()]);
+
+					// loop thru all the tiles' hitboxes and check for intersect
+					for (const childTile of this.tileGrid.flat()) {
+						const childContainer =
+							childTile.container as Phaser.GameObjects.Container;
+						const relativeHitBox = childContainer.input
+							.hitArea as Phaser.Geom.Polygon;
+						const hitBox = new Phaser.Geom.Polygon([
+							...relativeHitBox.points.map(
+								(point) =>
+									new Phaser.Geom.Point(
+										point.x + childContainer.x,
+										point.y + childContainer.y
+									)
+							),
+						]);
+						for (const linePoint of intersectLine.getPoints(10)) {
+							if (hitBox.contains(linePoint.x, linePoint.y)) {
+								this.addToChain(childTile);
+								continue;
+							}
+						}
+					}
+					*/
 				}
 
-				// finally push the current tile to the chain
 				this.addToChain(tile);
 			} else if (this.currentChain.length > 1) {
 				// needs a > 1 check cause touch events happen too fast
