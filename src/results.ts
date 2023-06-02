@@ -17,6 +17,10 @@ async function init() {
 		console.error(`board not found for session ${session}`);
 		return;
 	}
+	if (!SESSION_ID || !USER_ID) {
+		console.error(`Url param error, SESSION_ID: ${SESSION_ID}, USER_ID: ${USER_ID}`);
+		return;
+	}
 
 	// descending score order, else ascending alphabetical order
 	const sortedBoardWords = session.board.words.sort((a, b) =>
@@ -31,39 +35,45 @@ async function init() {
     found words:`);
 	console.log(wordsFoundByPlayers);
 
-	Object.values(session.scoredUsers)
-		.filter((scoredPlayer) => scoredPlayer.score !== undefined)
-		.forEach((scoredPlayer) => {
-			createScoreColumn(scoredPlayer, sortedBoardWords, wordsFoundByPlayers);
-		});
-}
-
-function createScoreColumn(
-	scoredPlayer: ScoredPlayer,
-	sortedBoardWords: string[],
-	wordsFoundByPlayers: Set<string>
-) {
-	const scoreColSection = document.getElementById("scoreCols");
-	if (!scoreColSection) {
-		console.error("Could not find scoreCols section in document");
+	// fill in main player score column
+	const mainPlayer = session.scoredUsers[USER_ID];
+	const mainPlayerCol = document.getElementById("mainPlayer");
+	if (!mainPlayerCol) {
+		console.error("Could not find main player column");
 		return;
 	}
-
-	const scoreCol = document.createElement("article");
-
-	const scoreColPlayerName = document.createElement("h4");
-	scoreColPlayerName.innerHTML = scoredPlayer.name;
-
-	const scoreColPlayerScore = document.createElement("h3");
-	scoreColPlayerScore.innerHTML = scoredPlayer.score
-		? scoredPlayer.score.toString()
+	(mainPlayerCol?.childNodes[1] as HTMLHeadingElement).innerHTML = mainPlayer.name;
+	const mainPlayerScore = mainPlayer.score;
+	(mainPlayerCol?.childNodes[3] as HTMLHeadingElement).innerHTML = mainPlayerScore
+		? mainPlayerScore.toString()
 		: "waiting...";
 
-	const scoreColWordsDiv = document.createElement("div");
+	populateColumnWords(sortedBoardWords, wordsFoundByPlayers, mainPlayer, mainPlayerCol);
 
-	scoreCol.append(scoreColPlayerName, scoreColPlayerScore, scoreColWordsDiv);
-	scoreColSection.appendChild(scoreCol);
+	delete session.scoredUsers[USER_ID];
 
+	// fill in the second col with some other player's score
+	let otherPlayerIdx = 0;
+	const otherPlayerCol = document.getElementById("otherPlayer");
+	if (!otherPlayerCol) {
+		console.error("Could not find other player column");
+		return;
+	}
+	const otherPlayer = Object.values(session.scoredUsers)[otherPlayerIdx];
+	(otherPlayerCol.childNodes[1] as HTMLHeadElement).innerHTML = otherPlayer.name;
+	(otherPlayerCol.childNodes[3] as HTMLHeadElement).innerHTML = otherPlayer.score
+		? otherPlayer.score.toString()
+		: "watiing...";
+
+	populateColumnWords(sortedBoardWords, wordsFoundByPlayers, otherPlayer, otherPlayerCol);
+}
+
+function populateColumnWords(
+	sortedBoardWords: string[],
+	wordsFoundByPlayers: Set<string>,
+	player: ScoredPlayer,
+	scoreCol: HTMLElement
+) {
 	for (const word of sortedBoardWords) {
 		if (wordsFoundByPlayers.has(word)) {
 			const wordRow = document.createElement("span");
@@ -72,12 +82,12 @@ function createScoreColumn(
 			const wordRowScore = document.createElement("p");
 			wordRowScore.innerHTML = `${getWordScore(word)}`;
 
-			if (!scoredPlayer.words.includes(word)) {
+			if (!player.words.includes(word)) {
 				wordRow.style.opacity = "0.3";
 			}
 
 			wordRow.append(wordRowWord, wordRowScore);
-			scoreColWordsDiv.appendChild(wordRow);
+			(scoreCol.childNodes[5] as HTMLDivElement).appendChild(wordRow);
 		}
 	}
 }

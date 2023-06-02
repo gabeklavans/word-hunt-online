@@ -1,55 +1,83 @@
 html {
-    font-family: "Interstate";
+	font-family: "Interstate";
+	height: 100%;
 }
 
 body {
+	display: flex;
+	flex-flow: column;
+	align-content: stretch;
 	margin: 0;
+	padding: 0;
+	height: 100%;
 }
 
 header {
-	height: 10vh;
-    align-items: center;
-    justify-content: center;
-    display: flex;
+	/* height: 10vh; */
+	align-items: center;
+	justify-content: center;
+	display: flex;
+	flex-grow: 1;
 }
 
-h1,h2,h3,h4 {
+#scoreCols {
+	display: flex;
+	flex-grow: 10;
+	justify-content: space-evenly;
+}
+
+footer {
+	display: flex;
+	justify-content: space-evenly;
+	align-content: center;
+	flex-grow: 1;
+}
+
+footer > button {
+	font-size: 300%;
+	background-color: transparent;
+	outline: none;
+	border: none;
+	padding: 0;
+}
+
+button:disabled {
+	opacity: 0.3;
+}
+
+h1,
+h2,
+h3,
+h4 {
 	text-align: center;
-    margin: 5px;
+	margin: 0px;
 }
 
 article {
-    padding: 0px 10px;
-    margin: 0px 5px;
+	padding: 10px 10px;
+	margin: 0;
 	background: lightsalmon;
-    height: 80vh;
-    min-width: 8em;
-    width: 40vw;
-    max-width: 15em;
-    display: flex;
-    flex-direction: column;
+	min-width: 8em;
+	width: 40vw;
+	max-width: 15em;
+	display: flex;
+	flex-direction: column;
 }
 
 article > div {
-    padding: 0px 15px;
-    overflow: auto;
+	padding: 0px 15px;
+	overflow: auto;
 }
 
 span {
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: space-between;
-    font-size: small;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	justify-content: space-between;
+	font-size: small;
 }
 
 span > p {
-    margin: 0;
-    padding: 0;
-}
-
-section {
-	display: flex;
-    overflow: auto;
-    padding: 5px;
+	margin: 0;
+	padding: 0;
 }
