@@ -10,6 +10,7 @@ body {
 	margin: 0;
 	padding: 0;
 	height: 100%;
+    overflow: hidden;
 }
 
 header {
@@ -17,20 +18,21 @@ header {
 	align-items: center;
 	justify-content: center;
 	display: flex;
-	flex-grow: 1;
+	flex: 1 10 auto;
 }
 
 #scoreCols {
 	display: flex;
-	flex-grow: 10;
+	flex: 10 1 auto;
 	justify-content: space-evenly;
+    overflow: auto;
 }
 
 footer {
 	display: flex;
 	justify-content: space-evenly;
 	align-content: center;
-	flex-grow: 1;
+	flex: 1 10 auto;
 }
 
 footer > button {
@@ -80,4 +82,5 @@ span {
 span > p {
 	margin: 0;
 	padding: 0;
+    font-size: medium;
 }

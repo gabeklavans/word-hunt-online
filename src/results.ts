@@ -40,6 +40,22 @@ document.getElementById("right-button")?.addEventListener("pointerdown", (event)
 	updateOtherPlayerColumn();
 });
 
+document.getElementById("mainPlayerScrollDiv")?.addEventListener("scroll", (event) => {
+	const otherPlayerScroller = document.getElementById("otherPlayerScrollDiv");
+	if (!otherPlayerScroller) {
+		return;
+	}
+	otherPlayerScroller.scrollTop = (event.target as HTMLDivElement).scrollTop;
+});
+
+document.getElementById("otherPlayerScrollDiv")?.addEventListener("scroll", (event) => {
+	const otherPlayerScroller = document.getElementById("mainPlayerScrollDiv");
+	if (!otherPlayerScroller) {
+		return;
+	}
+	otherPlayerScroller.scrollTop = (event.target as HTMLDivElement).scrollTop;
+});
+
 async function init() {
 	const res = await getSessionInfo(SESSION_ID ?? "");
 	session = (await res.json()) as SessionView;
@@ -132,7 +148,7 @@ function populateColumnWords(player: ScoredPlayer, scoreCol: HTMLElement) {
 			wordRowScore.innerHTML = `${getWordScore(word)}`;
 
 			if (!player.words.includes(word)) {
-				wordRow.style.opacity = "0.3";
+				wordRow.style.opacity = "0.15";
 			}
 
 			wordRow.append(wordRowWord, wordRowScore);
