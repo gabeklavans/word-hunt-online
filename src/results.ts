@@ -137,8 +137,9 @@ async function init() {
 
 function updateOtherPlayerColumn() {
 	(document.getElementById("left-button") as HTMLButtonElement).disabled = otherPlayerIdx === 0;
+
 	(document.getElementById("right-button") as HTMLButtonElement).disabled =
-		otherPlayerIdx === Object.keys(otherPlayers).length - 1;
+		otherPlayerIdx >= Object.keys(otherPlayers).length - 1;
 
 	const otherPlayerScoreDiv = document.getElementById("otherPlayerScrollDiv") as HTMLDivElement;
 	if (!otherPlayerScoreDiv) {
