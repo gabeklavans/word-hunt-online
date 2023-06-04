@@ -7,6 +7,7 @@ const urlParams = new URLSearchParams(window.location.search);
 export const SESSION_ID = urlParams.get("session");
 export const USER_ID = urlParams.get("user");
 const SHOW_ALL_WORDS_COOKIE = "showAllWords";
+const WORD_NOT_FOUND_OPACITY = 0.15;
 
 const CHECK_UPDATE_INTERVAL_MS = 1000;
 
@@ -63,7 +64,8 @@ const showAllWordsToggle = document.getElementById("showAllWords") as HTMLInputE
 if (showAllWordsToggle) {
 	showAllWordsToggle.addEventListener("change", () => {
 		document.cookie = `${SHOW_ALL_WORDS_COOKIE}=${showAllWordsToggle.checked}`;
-		location.reload();
+		showAllWords = showAllWordsToggle.checked;
+		updateAllScoreColWords();
 	});
 }
 
@@ -109,7 +111,7 @@ async function init() {
 
 	// fill in main player score column
 	const mainPlayer = session.scoredUsers[USER_ID];
-	const mainPlayerScoreDiv = document.getElementById("mainPlayerScrollDiv");
+	const mainPlayerScoreDiv = document.getElementById("mainPlayerScrollDiv") as HTMLDivElement;
 	if (!mainPlayerScoreDiv) {
 		console.error("Could not find main player scroll div");
 		return;
@@ -118,7 +120,8 @@ async function init() {
 	(document.getElementById("mainPlayerScore") as HTMLHeadingElement).innerHTML =
 		mainPlayer.score !== undefined ? mainPlayer.score.toString() : "waiting...";
 
-	populateColumnWords(mainPlayer, mainPlayerScoreDiv as HTMLDivElement);
+	populateColumnWords(mainPlayerScoreDiv);
+	updateScoreColWords(mainPlayer, mainPlayerScoreDiv);
 
 	otherPlayers = { ...session.scoredUsers };
 	delete otherPlayers[USER_ID];
@@ -128,6 +131,7 @@ async function init() {
 	}
 
 	// fill in the second col with some other player's score
+	populateColumnWords(document.getElementById("otherPlayerScrollDiv") as HTMLDivElement);
 	updateOtherPlayerColumn();
 }
 
@@ -136,7 +140,7 @@ function updateOtherPlayerColumn() {
 	(document.getElementById("right-button") as HTMLButtonElement).disabled =
 		otherPlayerIdx === Object.keys(otherPlayers).length - 1;
 
-	const otherPlayerScoreDiv = document.getElementById("otherPlayerScrollDiv");
+	const otherPlayerScoreDiv = document.getElementById("otherPlayerScrollDiv") as HTMLDivElement;
 	if (!otherPlayerScoreDiv) {
 		console.error("Could not find other player scroll div");
 		return;
@@ -152,27 +156,52 @@ function updateOtherPlayerColumn() {
 	(document.getElementById("otherPlayerScore") as HTMLHeadElement).innerHTML =
 		otherPlayer.score !== undefined ? otherPlayer.score.toString() : "waiting...";
 
-	populateColumnWords(otherPlayer, otherPlayerScoreDiv as HTMLDivElement);
+	updateScoreColWords(otherPlayer, otherPlayerScoreDiv);
 }
 
-function populateColumnWords(player: ScoredPlayer, scoreCol: HTMLDivElement) {
+function populateColumnWords(scoreCol: HTMLDivElement) {
 	console.log(sortedBoardWords);
 	for (const word of sortedBoardWords) {
-		if (showAllWords || wordsFoundByPlayers.has(word)) {
-			const wordRow = document.createElement("span");
-			const wordRowWord = document.createElement("p");
-			wordRowWord.innerHTML = word;
-			const wordRowScore = document.createElement("p");
-			wordRowScore.innerHTML = `${getWordScore(word)}`;
+		const wordRow = document.createElement("span");
+		const wordRowWord = document.createElement("p");
+		wordRowWord.innerHTML = word;
+		const wordRowScore = document.createElement("p");
+		wordRowScore.innerHTML = `${getWordScore(word)}`;
 
-			if (!player.words.includes(word)) {
-				wordRow.style.opacity = "0.15";
-			}
+		wordRow.append(wordRowWord, wordRowScore);
+		wordRow.style.display = "none"; // hide it by default
+		scoreCol.appendChild(wordRow);
+	}
+}
 
-			wordRow.append(wordRowWord, wordRowScore);
-			scoreCol.appendChild(wordRow);
+function updateScoreColWords(player: ScoredPlayer, scoreCol: HTMLDivElement) {
+	for (const wordScoreRowSpan of scoreCol.children) {
+		const [word, score] = Array.from(wordScoreRowSpan.children).map((child) => child.innerHTML);
+
+		if (!showAllWords && !wordsFoundByPlayers.has(word)) {
+			(wordScoreRowSpan as HTMLSpanElement).style.display = "none";
+			continue;
+		}
+
+		(wordScoreRowSpan as HTMLSpanElement).style.display = "flex";
+		if (!player.words.includes(word)) {
+			(wordScoreRowSpan as HTMLSpanElement).style.opacity = `${WORD_NOT_FOUND_OPACITY}`;
 		}
 	}
+}
+
+function updateAllScoreColWords() {
+	const mainPlayer = session.scoredUsers[USER_ID as string];
+	const mainPlayerScoreDiv = document.getElementById("mainPlayerScrollDiv") as HTMLDivElement;
+	updateScoreColWords(mainPlayer, mainPlayerScoreDiv);
+
+	const otherPlayer = Object.values(otherPlayers)[otherPlayerIdx];
+	if (!otherPlayer) {
+		console.warn("updateAllScoreColWords: other player not found");
+		return;
+	}
+	const otherPlayerScoreDiv = document.getElementById("otherPlayerScrollDiv") as HTMLDivElement;
+	updateScoreColWords(otherPlayer, otherPlayerScoreDiv);
 }
 
 async function checkForUpdatedSession() {
