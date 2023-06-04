@@ -92,16 +92,16 @@ async function init() {
 
 	// fill in main player score column
 	const mainPlayer = session.scoredUsers[USER_ID];
-	const mainPlayerCol = document.getElementById("mainPlayer");
-	if (!mainPlayerCol) {
-		console.error("Could not find main player column");
+	const mainPlayerScoreDiv = document.getElementById("mainPlayerScrollDiv");
+	if (!mainPlayerScoreDiv) {
+		console.error("Could not find main player scroll div");
 		return;
 	}
-	(mainPlayerCol?.childNodes[1] as HTMLHeadingElement).innerHTML = mainPlayer.name;
-	(mainPlayerCol?.childNodes[3] as HTMLHeadingElement).innerHTML =
+	(document.getElementById("mainPlayerName") as HTMLHeadingElement).innerHTML = mainPlayer.name;
+	(document.getElementById("mainPlayerScore") as HTMLHeadingElement).innerHTML =
 		mainPlayer.score !== undefined ? mainPlayer.score.toString() : "waiting...";
 
-	populateColumnWords(mainPlayer, mainPlayerCol);
+	populateColumnWords(mainPlayer, mainPlayerScoreDiv as HTMLDivElement);
 
 	otherPlayers = { ...session.scoredUsers };
 	delete otherPlayers[USER_ID];
@@ -119,9 +119,9 @@ function updateOtherPlayerColumn() {
 	(document.getElementById("right-button") as HTMLButtonElement).disabled =
 		otherPlayerIdx === Object.keys(otherPlayers).length - 1;
 
-	const otherPlayerCol = document.getElementById("otherPlayer");
-	if (!otherPlayerCol) {
-		console.error("Could not find other player column");
+	const otherPlayerScoreDiv = document.getElementById("otherPlayerScrollDiv");
+	if (!otherPlayerScoreDiv) {
+		console.error("Could not find other player scroll div");
 		return;
 	}
 
@@ -131,14 +131,15 @@ function updateOtherPlayerColumn() {
 		return;
 	}
 
-	(otherPlayerCol.childNodes[1] as HTMLHeadElement).innerHTML = otherPlayer.name;
-	(otherPlayerCol.childNodes[3] as HTMLHeadElement).innerHTML =
+	(document.getElementById("otherPlayerName") as HTMLHeadElement).innerHTML = otherPlayer.name;
+	(document.getElementById("otherPlayerScore") as HTMLHeadElement).innerHTML =
 		otherPlayer.score !== undefined ? otherPlayer.score.toString() : "waiting...";
 
-	populateColumnWords(otherPlayer, otherPlayerCol);
+	populateColumnWords(otherPlayer, otherPlayerScoreDiv as HTMLDivElement);
 }
 
-function populateColumnWords(player: ScoredPlayer, scoreCol: HTMLElement) {
+function populateColumnWords(player: ScoredPlayer, scoreCol: HTMLDivElement) {
+	console.log(sortedBoardWords);
 	for (const word of sortedBoardWords) {
 		if (wordsFoundByPlayers.has(word)) {
 			const wordRow = document.createElement("span");
@@ -152,7 +153,7 @@ function populateColumnWords(player: ScoredPlayer, scoreCol: HTMLElement) {
 			}
 
 			wordRow.append(wordRowWord, wordRowScore);
-			(scoreCol.childNodes[5] as HTMLDivElement).appendChild(wordRow);
+			scoreCol.appendChild(wordRow);
 		}
 	}
 }
