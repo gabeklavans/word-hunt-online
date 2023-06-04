@@ -25,6 +25,7 @@ header {
 	display: flex;
 	flex-direction: column;
 	flex: 10 1 auto;
+	background-color: lightsalmon;
 }
 
 #scoreCols > div {
@@ -76,9 +77,8 @@ h4 {
 }
 
 article {
-	padding: 0px 15px;
+	padding: 0;
 	margin: 0;
-	background: lightsalmon;
 	min-width: 8em;
 	width: 40vw;
 	max-width: 15em;
