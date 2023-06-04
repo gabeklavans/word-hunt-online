@@ -1,1 +1,2 @@
-export const SERVER_URL = "http://leet.dabe.tech:3000";
+export const SERVER_URL = "https://gj.dabe.tech";
+export const DEBUG = false;

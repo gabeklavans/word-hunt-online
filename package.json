@@ -1,32 +1,29 @@
 {
-    "name": "phaser3-ts-snowpack-eslint",
-    "version": "1.0.0",
-    "description": "A modern Phaser 3 template with TypeScript, Snowpack & ESLint",
-    "main": "src/main.ts",
-    "scripts": {
-        "start": "snowpack dev",
-        "prebuild": "tsc && npm run lint",
-        "build": "snowpack build",
-        "lint": "eslint . --ext .ts",
-        "lint:fix": "eslint . --ext .ts --fix",
-        "format": "prettier --write \"**/*.{ts,js,json,html}\"",
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "author": "paulasantamaria",
-    "license": "MIT",
-    "devDependencies": {
-        "@types/lodash": "^4.14.182",
-        "@types/nspell": "^2.1.3",
-        "@typescript-eslint/eslint-plugin": "^5.20.0",
-        "@typescript-eslint/parser": "^5.20.0",
-        "eslint": "^8.13.0",
-        "phaser": "^3.55.2",
-        "prettier": "^2.6.2",
-        "snowpack": "^3.8.8",
-        "typescript": "^4.6.3"
-    },
-    "dependencies": {
-        "lodash": "^4.17.21",
-        "phaser3-rex-plugins": "^1.1.70"
-    }
+	"name": "word-hunt-online",
+	"version": "1.0.0",
+	"description": "Word Hunt Online",
+	"main": "src/main.ts",
+	"scripts": {
+		"dev": "snowpack dev",
+		"prebuild": "tsc && npm run lint",
+		"build": "snowpack build",
+		"lint": "eslint . --ext .ts",
+		"lint:fix": "eslint . --ext .ts --fix",
+		"format": "prettier --write \"**/*.{ts,js,json,html}\""
+	},
+	"license": "MIT",
+	"devDependencies": {
+		"@types/lodash": "^4.14.182",
+		"@types/nspell": "^2.1.3",
+		"@typescript-eslint/eslint-plugin": "^5.20.0",
+		"@typescript-eslint/parser": "^5.20.0",
+		"eslint": "^8.13.0",
+		"phaser": "^3.55.2",
+		"prettier": "^2.6.2",
+		"snowpack": "^3.8.8",
+		"typescript": "^4.6.3"
+	},
+	"dependencies": {
+		"lodash": "^4.17.21"
+	}
 }

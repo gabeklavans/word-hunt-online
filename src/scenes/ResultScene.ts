@@ -3,195 +3,252 @@ import { SESSION_ID } from "../Main";
 import { getWordScore } from "../utils";
 import { isEqual } from "lodash";
 
-import {
-    ScrollablePanel,
-    RoundRectangle,
-    Label,
-    Sizer,
-} from "phaser3-rex-plugins/templates/ui/ui-components";
-
-const COLOR_PRIMARY = 0x4e342e;
-const COLOR_LIGHT = 0x7b5e57;
-const COLOR_DARK = 0x260e04;
-
 export default class ResultScene extends Phaser.Scene {
-    doneButton!: Phaser.GameObjects.Rectangle;
-    resultRefreshTimer!: Phaser.Time.TimerEvent;
-    waitTextTimer!: Phaser.Time.TimerEvent;
-    waitingText!: Phaser.GameObjects.BitmapText;
+	readonly FONT_SIZE = 30;
+	readonly COLOR_PRIMARY = 0x4e342e;
+	readonly COLOR_LIGHT = 0x7b5e57;
+	readonly COLOR_DARK = 0x260e04;
+	readonly MAX_DISPLAYED_WORDS = 11;
 
-    session?: SessionView;
-    panel!: ScrollablePanel;
+	padding!: number;
 
-    constructor() {
-        super({ key: "result", active: false });
-    }
+	resultRefreshTimer!: Phaser.Time.TimerEvent;
+	waitTextTimer!: Phaser.Time.TimerEvent;
+	waitingText!: Phaser.GameObjects.BitmapText;
+	curScoreStartIdx = 0;
 
-    async create() {
-        const track = new RoundRectangle(this, 0, 0, 20, 10, 10, COLOR_DARK);
-        this.add.existing(track);
-        const thumb = new RoundRectangle(this, 0, 0, 0, 0, 13, COLOR_LIGHT);
-        this.add.existing(thumb);
-        this.panel = new ScrollablePanel(this, {
-            x: 400,
-            y: 300,
-            width: 600,
+	doneButton!: Phaser.GameObjects.Rectangle;
+	leftangle!: Phaser.GameObjects.Rectangle;
+	rightangle!: Phaser.GameObjects.Rectangle;
+	prevScoresButton!: Phaser.GameObjects.Image;
+	nextScoresButton!: Phaser.GameObjects.Image;
+	textGroup!: Phaser.GameObjects.Group;
 
-            scrollMode: 1,
+	session?: SessionView;
 
-            panel: {
-                child: this.createScrollPanel(),
-            },
+	constructor() {
+		super({ key: "result", active: false });
+	}
 
-            slider: {
-                track,
-                thumb,
-            },
-        }).layout();
-        this.add.existing(this.panel);
+	async create() {
+		const halfCanvasWidth = this.game.canvas.width / 2;
+		this.padding = halfCanvasWidth * 0.1;
 
-        this.waitingText = this.add
-            .bitmapText(
-                this.cameras.main.centerX,
-                50,
-                "gothic",
-                "Waiting for results",
-                25
-            )
-            .setTintFill(0x000000)
-            .setOrigin(0.5)
-            .setDepth(2);
-        let numDots = 0;
+		const topPanelHeight = this.game.canvas.height * 0.04;
+		const bottomPanelHeight = this.game.canvas.height * 0.08;
 
-        const res = await getSessionInfo(SESSION_ID ?? "");
-        this.session = await res.json();
+		this.textGroup = this.add.group();
 
-        if (!this.session?.done) {
-            this.resultRefreshTimer = this.time.addEvent({
-                delay: 3 * 1000,
-                callback: this.checkForUpdatedSession,
-                callbackScope: this,
-                loop: true,
-                startAt: 2.5 * 1000,
-            });
+		/******** Status text ********/
+		let numDots = 0;
 
-            this.waitTextTimer = this.time.addEvent({
-                delay: 1 * 1000,
-                callback: () => {
-                    numDots = (numDots + 1) % 4;
-                    this.waitingText.setText(
-                        `Waiting for results${".".repeat(numDots)}` // I love that js just has a repeat method
-                    );
-                },
-                loop: true,
-                callbackScope: this,
-            });
-        } else {
-            this.waitingText.setText("Results!");
-        }
+		const res = await getSessionInfo(SESSION_ID ?? "");
+		this.session = await res.json();
 
-        this.displayScores();
+		this.waitingText = this.add
+			.bitmapText(
+				this.cameras.main.centerX,
+				this.padding / 2,
+				"gothic",
+				"Waiting for results",
+				topPanelHeight
+			)
+			.setTintFill(0x000000)
+			.setOrigin(0.5, 0)
+			.setDepth(2);
 
-        // const buttonContainer = this.add.container(
-        //     this.cameras.main.centerX,
-        //     Math.floor(this.cameras.main.height * 0.75)
-        // );
-        // buttonContainer.add(
-        //     this.add
-        //         .rectangle(
-        //             0,
-        //             0,
-        //             this.cameras.main.width * 0.3,
-        //             this.cameras.main.height * 0.1,
-        //             GOOD_COLOR
-        //         )
-        //         .setInteractive()
-        //         .on("pointerdown", this.doneButtonHandler, this)
-        // );
-        // buttonContainer.add(
-        //     this.add
-        //         .text(0, 0, "Exit", {
-        //             fontSize: `${this.cameras.main.height * 0.07}px`,
-        //             color: "black",
-        //         })
-        //         .setOrigin(0.5)
-        // );
-    }
+		if (!this.session?.done) {
+			this.resultRefreshTimer = this.time.addEvent({
+				delay: 3 * 1000,
+				callback: this.checkForUpdatedSession,
+				callbackScope: this,
+				loop: true,
+				startAt: 2.5 * 1000,
+			});
 
-    // doneButtonHandler() {
-    //     window.close();
-    // }
+			this.waitTextTimer = this.time.addEvent({
+				delay: 1 * 1000,
+				callback: () => {
+					numDots = (numDots + 1) % 4;
+					this.waitingText.setText(
+						`Waiting for results${".".repeat(numDots)}` // I love that js just has a repeat method
+					);
+				},
+				loop: true,
+				callbackScope: this,
+			});
+		} else {
+			this.waitingText.setText("Results!");
+		}
 
-    createScoreCard(content: string | string[]) {
-        // TODO: Add a vertical scolling container here with a header
-        const bg = new RoundRectangle(this, 0, 0, 200, 400, 20, COLOR_PRIMARY);
-        this.add.existing(bg);
+		/******** Score cards ********/
+		const cardWidth = halfCanvasWidth - this.padding * 1.5;
+		const cardHeight =
+			this.game.canvas.height -
+			this.padding * 2 -
+			(bottomPanelHeight + this.padding * 2) -
+			topPanelHeight;
 
-        const label = new Label(this, {
-            orientation: "y",
-            width: bg.displayWidth,
-            height: bg.displayHeight,
-            space: { top: 10, bottom: 10, left: 10, right: 10 },
-            background: bg,
-            text: this.add.bitmapText(0, 0, "gothic", content).setFontSize(15),
+		this.leftangle = this.add
+			.rectangle(
+				this.padding,
+				this.padding + topPanelHeight,
+				cardWidth,
+				cardHeight,
+				this.COLOR_LIGHT
+			)
+			.setOrigin(0);
 
-            align: "top",
-        });
-        return label;
-    }
+		this.rightangle = this.add
+			.rectangle(
+				this.game.canvas.width / 2 + this.padding / 2,
+				this.padding + topPanelHeight,
+				cardWidth,
+				cardHeight,
+				this.COLOR_LIGHT
+			)
+			.setOrigin(0);
 
-    createScrollPanel() {
-        const panel = new Sizer(this, {
-            orientation: "x",
-            space: { item: 50, top: 20, bottom: 20 },
-        });
-        this.add.existing(panel);
+		/******** Arrows ********/
+		this.prevScoresButton = this.add
+			.image(
+				halfCanvasWidth - this.padding,
+				this.game.canvas.height - this.padding,
+				"arrow-right"
+			)
+			.setOrigin(1, 1)
+			.setDisplaySize(bottomPanelHeight * 2, bottomPanelHeight * 1.5)
+			.setFlipX(true)
+			.setInteractive()
+			.on("pointerdown", () => {
+				this.decCurScoreStart();
+				this.displayScores(this.curScoreStartIdx);
+			});
 
-        return panel;
-    }
+		this.nextScoresButton = this.add
+			.image(
+				halfCanvasWidth + this.padding,
+				this.game.canvas.height - this.padding,
+				"arrow-right"
+			)
+			.setOrigin(0, 1)
+			.setDisplaySize(bottomPanelHeight * 2, bottomPanelHeight * 1.5)
+			.setInteractive()
+			.on("pointerdown", () => {
+				this.incCurScoreStart();
+				this.displayScores(this.curScoreStartIdx);
+			});
 
-    async checkForUpdatedSession() {
-        const res = await getSessionInfo(SESSION_ID ?? "");
-        const newSession: SessionView = await res.json();
+		this.displayScores(0);
+	}
 
-        if (!this.session) {
-            console.error("Session not initialized yet!");
-            return;
-        }
+	// doneButtonHandler() {
+	//     window.close();
+	// }
 
-        if (!isEqual(newSession.scoredUsers, this.session.scoredUsers)) {
-            this.scene.restart();
-        }
-    }
+	async checkForUpdatedSession() {
+		const res = await getSessionInfo(SESSION_ID ?? "");
+		const newSession: SessionView = await res.json();
 
-    displayScores() {
-        if (!this.session) {
-            console.error("Session not initialized yet!");
-            return;
-        }
+		if (!this.session) {
+			console.error("Session not initialized yet!");
+			return;
+		}
 
-        for (const scoredUser of Object.values(this.session.scoredUsers)) {
-            let words: string[] = [];
-            const scoreText = scoredUser.score
-                ? scoredUser.score.toString()
-                : "waiting...";
+		if (!isEqual(newSession.scoredUsers, this.session.scoredUsers)) {
+			this.scene.restart();
+		}
+	}
 
-            words.push(
-                ...[
-                    scoredUser.name + " - " + scoreText,
-                    "--------", //
-                ]
-            );
-            words = words.concat(
-                scoredUser.words.map(
-                    (word) => word + " - " + getWordScore(word)
-                )
-            );
+	decCurScoreStart(): void {
+		this.curScoreStartIdx = Math.max(0, this.curScoreStartIdx - 1);
+	}
 
-            (
-                this.panel.getElement("panel") as Phaser.GameObjects.Container
-            ).add(this.createScoreCard(words));
-            this.panel.layout();
-        }
-    }
+	incCurScoreStart(): void {
+		if (!this.session) {
+			console.warn("Tried to change pages with out session initialized...");
+			return;
+		}
+
+		this.curScoreStartIdx = Math.min(
+			Math.max(0, Object.values(this.session.scoredUsers).length - 1),
+			this.curScoreStartIdx + 1
+		);
+	}
+
+	displayScores(startIdx: number) {
+		if (!this.session) {
+			console.error("Session not initialized yet!");
+			return;
+		}
+
+		this.textGroup.destroy(true, true);
+		this.textGroup = this.add.group();
+
+		Object.values(this.session.scoredUsers)
+			.sort(this.sortScores)
+			.slice(startIdx, startIdx + 2)
+			.forEach((wordScore, idx) => {
+				const targetCard = [this.leftangle, this.rightangle][idx];
+
+				const nameText = this.add
+					.bitmapText(0, 0, "gothic", [
+						wordScore.name,
+						wordScore.score?.toString() ?? "waiting...",
+					])
+					.setCenterAlign()
+					.setFontSize(this.FONT_SIZE);
+				this.textGroup.add(nameText);
+
+				Phaser.Display.Align.In.TopCenter(nameText, targetCard, undefined, -10);
+
+				const wordScores = wordScore.words
+					.map((word) => {
+						return {
+							word: word,
+							score: getWordScore(word).toString(),
+						};
+					})
+					.sort(this.sortWordScores)
+					.slice(0, this.MAX_DISPLAYED_WORDS);
+
+				const scoreTexts = this.add
+					.bitmapText(
+						0,
+						0,
+						"gothic",
+						wordScores.map((wScore) => `${wScore.word}  -  ${wScore.score}`),
+						this.FONT_SIZE
+					)
+					.setLeftAlign();
+				this.textGroup.add(scoreTexts);
+
+				Phaser.Display.Align.To.BottomLeft(
+					scoreTexts,
+					nameText,
+					undefined,
+					this.padding / 2
+				);
+				scoreTexts.setX(targetCard.x + this.padding / 2);
+			});
+	}
+
+	sortWordScores(a: WordScore, b: WordScore) {
+		// descending score order else ascending alphabetical order
+		const aScore = parseInt(a.score) ?? Number.MIN_SAFE_INTEGER;
+		const bScore = parseInt(b.score) ?? Number.MIN_SAFE_INTEGER;
+		if (aScore !== bScore) {
+			return bScore - aScore;
+		} else {
+			return a.word.localeCompare(b.word);
+		}
+	}
+
+	sortScores(a: ScoredPlayer, b: ScoredPlayer) {
+		if (!a.score && !b.score) return 0;
+		else if (!a.score) return 1;
+		else if (!b.score) return -1;
+
+		return b.score - a.score;
+	}
 }
