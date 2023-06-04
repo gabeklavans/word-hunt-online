@@ -8,6 +8,7 @@ export default class BoardScene extends Phaser.Scene {
 	imageGroup!: Phaser.GameObjects.Group;
 	tileContainerGroup!: Phaser.GameObjects.Group;
 	gameTimeText!: Phaser.GameObjects.BitmapText;
+	chainText!: Phaser.GameObjects.BitmapText;
 	gameTimeTextPrefix = "⏳";
 	gameTimer?: Phaser.Time.TimerEvent;
 	tileGrid: Tile[][] = [];
@@ -99,6 +100,17 @@ export default class BoardScene extends Phaser.Scene {
 			.setOrigin(0.5, 0)
 			.setVisible(false)
 			.setDepth(2);
+
+		this.chainText = this.add
+			.bitmapText(
+				this.cameras.main.centerX,
+				125,
+				"gothic",
+				"",
+				this.gameTimeText.fontSize / 2
+			)
+			.setTintFill(0x000000)
+			.setOrigin(0.5, 0);
 
 		if (DEBUG) {
 			this.gameTimeText.setInteractive().on("pointerdown", this.handleGameEnd, this);
@@ -344,6 +356,7 @@ export default class BoardScene extends Phaser.Scene {
 	addToChain(tile: Tile) {
 		if (!this.currentChain.includes(tile)) {
 			this.currentChain.push(tile);
+			this.chainText.setText(this.chainText.text + tile.letter);
 			this.drawChainLine();
 
 			const GROWTH = 15;
@@ -360,10 +373,13 @@ export default class BoardScene extends Phaser.Scene {
 			const word = this.currentChain.map((tile) => tile.letter).join("");
 			if (this.foundWords.has(word)) {
 				this.updateChainColors(this.REPEAT_COLOR);
+				this.chainText.setTint(this.REPEAT_COLOR);
 			} else if (this.boardWords.has(word)) {
 				this.updateChainColors(GOOD_COLOR);
+				this.chainText.setTint(GOOD_COLOR);
 			} else {
 				this.updateChainColors(this.DRAG_COLOR);
+				this.chainText.setTint(0x000000);
 			}
 		}
 	}
@@ -420,6 +436,7 @@ export default class BoardScene extends Phaser.Scene {
 		this.imageGroup.getChildren().forEach((tileImage) => {
 			(tileImage as Phaser.GameObjects.Image).setDisplaySize(this.TILE_SIZE, this.TILE_SIZE);
 		});
+		this.chainText.setText("");
 		console.debug(`cur score: ${this.curScore}`);
 	}
 }
