@@ -1,4 +1,4 @@
-import { BAD_COLOR, GOOD_COLOR, IS_SPECTATE, SESSION_ID, USER_ID } from "../Main";
+import { BAD_COLOR, GOOD_COLOR, SESSION_ID, USER_ID } from "../Main";
 import eventsCenter, { WHOEvents } from "../WHOEvents";
 import { notifyPlayerStarted } from "../api";
 

@@ -176,9 +176,6 @@ function populateColumnWords(scoreCol: HTMLDivElement) {
 }
 
 function updateScoreColWords(player: ScoredPlayer, scoreCol: HTMLDivElement) {
-	// prevent funky lingering scroll
-	(document.getElementById("scoreWindow") as HTMLDivElement).scrollTop = 0;
-
 	for (const wordScoreRowSpan of scoreCol.children) {
 		const [word, score] = Array.from(wordScoreRowSpan.children).map((child) => child.innerHTML);
 
