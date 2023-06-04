@@ -6,6 +6,7 @@ import { DEBUG } from "./env";
 const urlParams = new URLSearchParams(window.location.search);
 export const SESSION_ID = urlParams.get("session");
 export const USER_ID = urlParams.get("user");
+const SHOW_ALL_WORDS_COOKIE = "showAllWords";
 
 const CHECK_UPDATE_INTERVAL_MS = 1000;
 
@@ -16,6 +17,8 @@ let otherPlayers: {
 	[key: string]: ScoredPlayer;
 };
 let otherPlayerIdx = 0;
+
+let showAllWords: boolean;
 
 setInterval(checkForUpdatedSession, CHECK_UPDATE_INTERVAL_MS);
 
@@ -56,7 +59,21 @@ document.getElementById("otherPlayerScrollDiv")?.addEventListener("scroll", (eve
 	otherPlayerScroller.scrollTop = (event.target as HTMLDivElement).scrollTop;
 });
 
+const showAllWordsToggle = document.getElementById("showAllWords") as HTMLInputElement;
+if (showAllWordsToggle) {
+	showAllWordsToggle.addEventListener("change", () => {
+		document.cookie = `${SHOW_ALL_WORDS_COOKIE}=${showAllWordsToggle.checked}`;
+		location.reload();
+	});
+}
+
 async function init() {
+	showAllWords = checkShowAllWords();
+	if (DEBUG) {
+		console.debug(`Show all words: ${showAllWords}`);
+	}
+	showAllWordsToggle.checked = showAllWords;
+
 	const res = await getSessionInfo(SESSION_ID ?? "");
 	session = (await res.json()) as SessionView;
 	if (DEBUG) {
@@ -141,7 +158,7 @@ function updateOtherPlayerColumn() {
 function populateColumnWords(player: ScoredPlayer, scoreCol: HTMLDivElement) {
 	console.log(sortedBoardWords);
 	for (const word of sortedBoardWords) {
-		if (wordsFoundByPlayers.has(word)) {
+		if (showAllWords || wordsFoundByPlayers.has(word)) {
 			const wordRow = document.createElement("span");
 			const wordRowWord = document.createElement("p");
 			wordRowWord.innerHTML = word;
@@ -170,6 +187,19 @@ async function checkForUpdatedSession() {
 	if (!isEqual(newSession.scoredUsers, session.scoredUsers)) {
 		location.reload();
 	}
+}
+
+function checkShowAllWords() {
+	const showAllWordsCookie = document.cookie
+		.split("; ")
+		.find((cookie) => cookie.startsWith(`${SHOW_ALL_WORDS_COOKIE}=`));
+
+	if (!showAllWordsCookie) {
+		console.warn("show all words cookie not found!");
+		return false;
+	}
+
+	return showAllWordsCookie.split("=")[1] === "true";
 }
 
 init().catch(console.error);

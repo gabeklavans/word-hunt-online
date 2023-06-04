@@ -11,7 +11,8 @@
 	<body>
 		<script type="module" src="dist/results.js"></script>
 		<header>
-			<p></p>
+			<input type="checkbox" id="showAllWords" name="showAllWords" />
+			<label for="showAllWords">Show all words</label>
 		</header>
 
 		<section id="scoreCols">
@@ -26,10 +27,8 @@
 				</article>
 			</div>
 			<div id="scoreWindow">
-				<article id="mainPlayerScrollDiv">
-				</article>
-				<article id="otherPlayerScrollDiv">
-				</article>
+				<article id="mainPlayerScrollDiv"></article>
+				<article id="otherPlayerScrollDiv"></article>
 			</div>
 		</section>
 
