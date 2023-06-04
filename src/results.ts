@@ -176,6 +176,8 @@ function populateColumnWords(scoreCol: HTMLDivElement) {
 }
 
 function updateScoreColWords(player: ScoredPlayer, scoreCol: HTMLDivElement) {
+	console.log(`updating score col for ${player.name}`);
+
 	for (const wordScoreRowSpan of scoreCol.children) {
 		const [word, score] = Array.from(wordScoreRowSpan.children).map((child) => child.innerHTML);
 
@@ -185,9 +187,9 @@ function updateScoreColWords(player: ScoredPlayer, scoreCol: HTMLDivElement) {
 		}
 
 		(wordScoreRowSpan as HTMLSpanElement).style.display = "flex";
-		if (!player.words.includes(word)) {
-			(wordScoreRowSpan as HTMLSpanElement).style.opacity = `${WORD_NOT_FOUND_OPACITY}`;
-		}
+		(wordScoreRowSpan as HTMLSpanElement).style.opacity = player.words.includes(word)
+			? "1"
+			: `${WORD_NOT_FOUND_OPACITY}`;
 	}
 }
 
