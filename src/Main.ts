@@ -15,6 +15,10 @@ export const USER_ID = urlParams.get("user");
 const isSpectate = urlParams.get("spectate");
 export const IS_SPECTATE = JSON.parse(isSpectate as string) as boolean;
 
+if (IS_SPECTATE) {
+	window.location.href = `results.html?session=${SESSION_ID}&user=${USER_ID}`;
+}
+
 const config: Phaser.Types.Core.GameConfig = {
 	type: Phaser.AUTO,
 	scale: {

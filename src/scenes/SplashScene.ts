@@ -1,4 +1,4 @@
-import { BAD_COLOR, GOOD_COLOR, IS_SPECTATE, SESSION_ID, USER_ID } from "../Main";
+import { BAD_COLOR, GOOD_COLOR, SESSION_ID, USER_ID } from "../Main";
 import eventsCenter, { WHOEvents } from "../WHOEvents";
 import { notifyPlayerStarted } from "../api";
 
@@ -59,11 +59,7 @@ export default class SplashScene extends Phaser.Scene {
 			.add(this.startButtonText)
 			.setDepth(3);
 
-		if (!IS_SPECTATE) {
-			this.scene.launch("board");
-		} else {
-			this.scene.switch("result");
-		}
+		this.scene.launch("board");
 	}
 
 	async startButtonHandler() {

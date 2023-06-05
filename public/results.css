@@ -1,0 +1,101 @@
+html {
+	font-family: "Interstate";
+	height: 100%;
+}
+
+body {
+	display: flex;
+	flex-flow: column;
+	align-content: stretch;
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	overflow: hidden;
+}
+
+header {
+	/* height: 10vh; */
+	align-items: center;
+	justify-content: center;
+	display: flex;
+	flex: 0 10 auto;
+}
+
+#scoreCols {
+	display: flex;
+	flex-direction: column;
+	flex: 10 1 auto;
+	background-color: lightsalmon;
+}
+
+#scoreCols > div {
+	display: flex;
+	justify-content: space-evenly;
+}
+
+#headerWindow {
+	height: min-content;
+	flex: 0 0 auto;
+}
+
+#scoreWindow {
+	height: 1vh; /* I have no idea why I need this but it breaks without it */
+	overflow: scroll;
+	flex: 1 1 auto;
+}
+
+footer {
+	display: flex;
+	justify-content: space-evenly;
+	align-content: center;
+	flex: 0 10 auto;
+}
+
+footer > button {
+	font-size: 300%;
+	background-color: transparent;
+	outline: none;
+	border: none;
+	padding: 0;
+}
+
+button:disabled {
+	opacity: 0.3;
+}
+
+h1,
+h2,
+h3,
+h4 {
+	text-align: center;
+	margin: 0px;
+}
+
+#scoreWindow > article {
+	/* min-height: 100%; */ /* Might need to play with this more */
+	height: max-content;
+}
+
+article {
+	padding: 0;
+	margin: 0;
+	min-width: 8em;
+	width: 40vw;
+	max-width: 15em;
+	display: flex;
+	flex-direction: column;
+}
+
+span {
+	margin: 0;
+	padding: 0;
+	display: flex;
+	justify-content: space-between;
+	font-size: small;
+}
+
+span > p {
+	margin: 0;
+	padding: 0;
+	font-size: medium;
+}

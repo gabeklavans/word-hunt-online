@@ -31,7 +31,7 @@ type BoardData = {
 	words: string[];
 };
 
-type Scores = {
+type ScoredPlayer = {
 	score?: number;
 	words: string[];
 	name: string;
@@ -40,7 +40,7 @@ type Scores = {
 type SessionView = {
 	board?: BoardData;
 	scoredUsers: {
-		[key: string]: Scores;
+		[key: string]: ScoredPlayer;
 	};
 	done: boolean;
 };
