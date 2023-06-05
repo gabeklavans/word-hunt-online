@@ -104,13 +104,13 @@ export default class BoardScene extends Phaser.Scene {
 		this.chainText = this.add
 			.bitmapText(
 				this.cameras.main.centerX,
-				125,
+				160,
 				"gothic",
 				"",
 				this.gameTimeText.fontSize / 2
 			)
 			.setTintFill(0x000000)
-			.setOrigin(0.5, 0);
+			.setOrigin(0.5, 0.5);
 
 		if (DEBUG) {
 			this.gameTimeText.setInteractive().on("pointerdown", this.handleGameEnd, this);
@@ -411,6 +411,25 @@ export default class BoardScene extends Phaser.Scene {
 	}
 
 	endChain() {
+		const fadeTween = this.tweens.add({
+			targets: this.chainText,
+			props: {
+				alpha: {
+					value: 0,
+					duration: 100,
+					ease: Phaser.Math.Easing.Linear,
+				},
+			},
+			paused: true,
+			onComplete: (tween, targets) => {
+				(targets[0] as Phaser.GameObjects.BitmapText).setText("").setAlpha(1).setScale(1);
+			},
+		});
+
+		let chainTextAnim = () => {
+			fadeTween.play();
+		};
+
 		if (this.isDragging) {
 			this.imageGroup.setTint(this.IDLE_COLOR);
 
@@ -423,6 +442,21 @@ export default class BoardScene extends Phaser.Scene {
 					}
 					this.curScore += wordScore;
 					this.foundWords.add(word);
+
+					// found word animation
+					chainTextAnim = () => {
+						this.tweens.add({
+							targets: this.chainText,
+							props: {
+								scale: {
+									value: "+=0.3",
+									duration: 100,
+									ease: (v: number) => Phaser.Math.Easing.Back.Out(v, 5),
+								},
+							},
+							onComplete: () => fadeTween.play(),
+						});
+					};
 				}
 			} else {
 				// TODO: do some already found effect on the chain
@@ -436,7 +470,11 @@ export default class BoardScene extends Phaser.Scene {
 		this.imageGroup.getChildren().forEach((tileImage) => {
 			(tileImage as Phaser.GameObjects.Image).setDisplaySize(this.TILE_SIZE, this.TILE_SIZE);
 		});
-		this.chainText.setText("");
-		console.debug(`cur score: ${this.curScore}`);
+
+		chainTextAnim();
+
+		if (DEBUG) {
+			console.debug(`cur score: ${this.curScore}`);
+		}
 	}
 }
