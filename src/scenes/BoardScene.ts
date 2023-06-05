@@ -8,6 +8,8 @@ export default class BoardScene extends Phaser.Scene {
 	imageGroup!: Phaser.GameObjects.Group;
 	tileContainerGroup!: Phaser.GameObjects.Group;
 	gameTimeText!: Phaser.GameObjects.BitmapText;
+	chainText!: Phaser.GameObjects.BitmapText;
+	chainScoreText!: Phaser.GameObjects.BitmapText;
 	gameTimeTextPrefix = "⏳";
 	gameTimer?: Phaser.Time.TimerEvent;
 	tileGrid: Tile[][] = [];
@@ -99,6 +101,23 @@ export default class BoardScene extends Phaser.Scene {
 			.setOrigin(0.5, 0)
 			.setVisible(false)
 			.setDepth(2);
+
+		this.chainText = this.add
+			.bitmapText(
+				this.cameras.main.centerX,
+				140,
+				"gothic",
+				"",
+				this.gameTimeText.fontSize / 2
+			)
+			.setTintFill(0x000000)
+			.setOrigin(0.5, 0.5);
+
+		this.chainScoreText = this.add
+			.bitmapText(0, 0, "gothic", "", this.chainText.fontSize * 0.5)
+			.setTintFill(0x000000)
+			.setOrigin(0.5, 0.5);
+		Phaser.Display.Align.To.BottomCenter(this.chainScoreText, this.chainText, 0, 40);
 
 		if (DEBUG) {
 			this.gameTimeText.setInteractive().on("pointerdown", this.handleGameEnd, this);
@@ -344,6 +363,10 @@ export default class BoardScene extends Phaser.Scene {
 	addToChain(tile: Tile) {
 		if (!this.currentChain.includes(tile)) {
 			this.currentChain.push(tile);
+			const curWord = this.currentChain.map((tile) => tile.letter).join("");
+			const curWordScore = getWordScore(curWord);
+			this.chainText.setText(curWord);
+
 			this.drawChainLine();
 
 			const GROWTH = 15;
@@ -360,10 +383,18 @@ export default class BoardScene extends Phaser.Scene {
 			const word = this.currentChain.map((tile) => tile.letter).join("");
 			if (this.foundWords.has(word)) {
 				this.updateChainColors(this.REPEAT_COLOR);
+				this.chainText.setTint(this.REPEAT_COLOR);
+				this.chainScoreText.setText("");
 			} else if (this.boardWords.has(word)) {
 				this.updateChainColors(GOOD_COLOR);
+				this.chainText.setTint(GOOD_COLOR);
+				if (curWordScore > 0) {
+					this.chainScoreText.setText(`+ ${curWordScore}`);
+				}
 			} else {
 				this.updateChainColors(this.DRAG_COLOR);
+				this.chainText.setTint(0x000000);
+				this.chainScoreText.setText("");
 			}
 		}
 	}
@@ -395,6 +426,27 @@ export default class BoardScene extends Phaser.Scene {
 	}
 
 	endChain() {
+		const fadeTween = this.tweens.add({
+			targets: [this.chainText, this.chainScoreText],
+			props: {
+				alpha: {
+					value: 0,
+					duration: 100,
+					ease: Phaser.Math.Easing.Linear,
+				},
+			},
+			paused: true,
+			onComplete: (tween, targets) => {
+				targets.forEach((text) =>
+					(text as Phaser.GameObjects.BitmapText).setText("").setAlpha(1).setScale(1)
+				);
+			},
+		});
+
+		let chainTextAnim = () => {
+			fadeTween.play();
+		};
+
 		if (this.isDragging) {
 			this.imageGroup.setTint(this.IDLE_COLOR);
 
@@ -407,9 +459,25 @@ export default class BoardScene extends Phaser.Scene {
 					}
 					this.curScore += wordScore;
 					this.foundWords.add(word);
+
+					// found word animation
+					chainTextAnim = () => {
+						this.tweens.add({
+							targets: [this.chainText, this.chainScoreText],
+							props: {
+								scale: {
+									value: "+=0.3",
+									duration: 100,
+									ease: (v: number) => Phaser.Math.Easing.Back.Out(v, 5),
+								},
+							},
+							onComplete: () => fadeTween.play(),
+						});
+					};
 				}
 			} else {
 				// TODO: do some already found effect on the chain
+				// Future Gabe: do I actually wanna do that..?
 			}
 
 			this.currentChain = [];
@@ -420,6 +488,11 @@ export default class BoardScene extends Phaser.Scene {
 		this.imageGroup.getChildren().forEach((tileImage) => {
 			(tileImage as Phaser.GameObjects.Image).setDisplaySize(this.TILE_SIZE, this.TILE_SIZE);
 		});
-		console.debug(`cur score: ${this.curScore}`);
+
+		chainTextAnim();
+
+		if (DEBUG) {
+			console.debug(`cur score: ${this.curScore}`);
+		}
 	}
 }
