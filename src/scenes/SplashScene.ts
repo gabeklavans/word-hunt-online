@@ -1,6 +1,7 @@
 import { BAD_COLOR, GOOD_COLOR, SESSION_ID, USER_ID } from "../Main";
 import eventsCenter, { WHOEvents } from "../WHOEvents";
 import { notifyPlayerStarted } from "../api";
+import CircleBars from "../spinners/basic/CircleBars";
 
 export default class SplashScene extends Phaser.Scene {
 	boardDone = false;
@@ -8,6 +9,7 @@ export default class SplashScene extends Phaser.Scene {
 	startButtonContainer!: Phaser.GameObjects.Container;
 	startButton!: Phaser.GameObjects.Rectangle;
 	startButtonText!: Phaser.GameObjects.BitmapText;
+	circleBarsSpinner!: CircleBars;
 
 	constructor() {
 		super({ key: "splash" });
@@ -59,6 +61,14 @@ export default class SplashScene extends Phaser.Scene {
 			.add(this.startButtonText)
 			.setDepth(3);
 
+		this.circleBarsSpinner = CircleBars.create(
+			this,
+			this.cameras.main.centerX,
+			this.cameras.main.centerY,
+			50,
+			0x000000
+		).play();
+
 		this.scene.launch("board");
 	}
 
@@ -75,5 +85,7 @@ export default class SplashScene extends Phaser.Scene {
 			this.startButton.fillColor = GOOD_COLOR;
 		}
 		this.boardDone = true;
+		// "delete" the spinner
+		this.circleBarsSpinner.setPosition(2000, 2000);
 	}
 }
