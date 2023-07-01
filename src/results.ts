@@ -9,7 +9,7 @@ export const USER_ID = urlParams.get("user");
 const SHOW_ALL_WORDS_COOKIE = "showAllWords";
 const WORD_NOT_FOUND_OPACITY = 0.15;
 
-const CHECK_UPDATE_INTERVAL_MS = 1000;
+const CHECK_UPDATE_INTERVAL_MS = 3000;
 
 let session: SessionView;
 let sortedBoardWords: string[];

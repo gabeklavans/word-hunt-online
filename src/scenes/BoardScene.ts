@@ -57,6 +57,9 @@ export default class BoardScene extends Phaser.Scene {
 			const keyObj = this.input.keyboard.addKey("E"); // Get key object
 			keyObj.on("down", this.handleGameEnd, this);
 		}
+		this.input.on("pointerdown", () => {
+			this.isDragging = true;
+		});
 
 		// initialize variables
 		const gameWidth = this.game.config.width;
@@ -215,19 +218,45 @@ export default class BoardScene extends Phaser.Scene {
 				const NUDGE = 2;
 				// NOTE: The Point coords are relative to the CENTER of the tile image
 				const topPoint = new Phaser.Geom.Point(0, -tileImage.displayHeight / 2 - NUDGE);
+				const topRightPoint = new Phaser.Geom.Point(
+					tileImage.displayWidth * 0.37,
+					-tileImage.displayHeight * 0.37
+				);
 				const rightPoint = new Phaser.Geom.Point(tileImage.displayWidth / 2 + NUDGE, 0);
+				const bottomRightPoint = new Phaser.Geom.Point(
+					tileImage.displayWidth * 0.37,
+					tileImage.displayHeight * 0.37
+				);
 				const bottomPoint = new Phaser.Geom.Point(0, tileImage.displayHeight / 2 + NUDGE);
+				const bottomLeftPoint = new Phaser.Geom.Point(
+					-tileImage.displayWidth * 0.37,
+					tileImage.displayHeight * 0.37
+				);
 				const leftPoint = new Phaser.Geom.Point(-tileImage.displayWidth / 2 - NUDGE, 0);
+				const topLeftPoint = new Phaser.Geom.Point(
+					-tileImage.displayWidth * 0.37,
+					-tileImage.displayHeight * 0.37
+				);
 				tileContainer
 					.setInteractive(
-						new Phaser.Geom.Polygon([topPoint, rightPoint, bottomPoint, leftPoint]),
+						new Phaser.Geom.Polygon([
+							topPoint,
+							topRightPoint,
+							rightPoint,
+							bottomRightPoint,
+							bottomPoint,
+							bottomLeftPoint,
+							leftPoint,
+							topLeftPoint,
+						]),
 						Phaser.Geom.Polygon.Contains
 					)
-					.on("pointerover", () => {
+					.on("pointerdown", () => {
+						this.isDragging = true;
 						this.handleAddToChain(tile);
 					})
-					.on("pointerdown", () => {
-						this.startChain(tile);
+					.on("pointerover", () => {
+						this.handleAddToChain(tile);
 					});
 
 				if (DEBUG) {
@@ -258,7 +287,6 @@ export default class BoardScene extends Phaser.Scene {
 					),
 					pointExitRect
 				)
-				.on("pointerover", () => this.endChain())
 				.setDepth(-1);
 
 			if (DEBUG) {
@@ -281,83 +309,40 @@ export default class BoardScene extends Phaser.Scene {
 	}
 
 	handleAddToChain(tile: Tile) {
-		if (this.isDragging) {
-			if (!this.currentChain.includes(tile)) {
-				// check for skipped tiles and fill them in for the player
-				const lastTileInChain =
-					this.currentChain.length > 0
-						? this.currentChain[this.currentChain.length - 1]
-						: undefined;
-				if (
-					lastTileInChain &&
-					Phaser.Math.Distance.Between(
-						lastTileInChain.row,
-						lastTileInChain.col,
-						tile.row,
-						tile.col
-					) > Math.sqrt(2)
-				) {
-					if (!lastTileInChain.container || !tile.container) {
-						console.error("Containers not initialized");
-						// TODO: Error scene
-						this.game.destroy(true, true);
-						return;
-					}
-
-					if (DEBUG) {
-						console.debug("Skipped tile detected!");
-					}
-
-					// just skip this tile, wait for user to hit a valid one
-					return;
-
-					/**
-					 * NOTE: This auto-fill-skipped tiles code actually kinda works,
-					 * but it has weird edge-cases that I think are not worth trying
-					 * to figure out how to reconcile in an intuitive way.
-					 * Now you can peruse it as a relic of a forlorn idea.
-					 */
-					/*
-					// draw a line and fill in the intersected tiles
-					const intersectLine = new Phaser.Geom.Line(
-						lastTileInChain.container.x,
-						lastTileInChain.container.y,
-						tile.container.x,
-						tile.container.y
-					);
-					console.log([intersectLine.getPointA(), intersectLine.getPointB()]);
-
-					// loop thru all the tiles' hitboxes and check for intersect
-					for (const childTile of this.tileGrid.flat()) {
-						const childContainer =
-							childTile.container as Phaser.GameObjects.Container;
-						const relativeHitBox = childContainer.input
-							.hitArea as Phaser.Geom.Polygon;
-						const hitBox = new Phaser.Geom.Polygon([
-							...relativeHitBox.points.map(
-								(point) =>
-									new Phaser.Geom.Point(
-										point.x + childContainer.x,
-										point.y + childContainer.y
-									)
-							),
-						]);
-						for (const linePoint of intersectLine.getPoints(10)) {
-							if (hitBox.contains(linePoint.x, linePoint.y)) {
-								this.addToChain(childTile);
-								continue;
-							}
-						}
-					}
-					*/
-				}
-
-				this.addToChain(tile);
-			} else if (this.currentChain.length > 1) {
-				// needs a > 1 check cause touch events happen too fast
-				this.endChain();
-			}
+		if (!this.isDragging) {
+			return;
 		}
+
+		if (this.currentChain.includes(tile)) {
+			if (DEBUG) console.debug("Duplicate tile detected, ignoring...");
+			return;
+		}
+
+		const lastTileInChain = this.currentChain.at(-1);
+
+		const isTileReachable =
+			lastTileInChain &&
+			Phaser.Math.Distance.Between(
+				lastTileInChain.row,
+				lastTileInChain.col,
+				tile.row,
+				tile.col
+			) <= Math.sqrt(2);
+		if (lastTileInChain && !isTileReachable) {
+			if ((lastTileInChain && !lastTileInChain.container) || !tile.container) {
+				console.error("Containers not initialized");
+				// TODO: Error scene
+				this.game.destroy(true, true);
+				return;
+			}
+
+			if (DEBUG) console.debug("Skipped tile detected, ignoring...");
+
+			// just skip this tile, wait for user to hit a valid one
+			return;
+		}
+
+		this.addToChain(tile);
 	}
 
 	addToChain(tile: Tile) {
