@@ -219,23 +219,23 @@ export default class BoardScene extends Phaser.Scene {
 				// NOTE: The Point coords are relative to the CENTER of the tile image
 				const topPoint = new Phaser.Geom.Point(0, -tileImage.displayHeight / 2 - NUDGE);
 				const topRightPoint = new Phaser.Geom.Point(
-					tileImage.displayWidth * 0.4,
-					-tileImage.displayHeight * 0.4
+					tileImage.displayWidth * 0.37,
+					-tileImage.displayHeight * 0.37
 				);
 				const rightPoint = new Phaser.Geom.Point(tileImage.displayWidth / 2 + NUDGE, 0);
 				const bottomRightPoint = new Phaser.Geom.Point(
-					tileImage.displayWidth * 0.4,
-					tileImage.displayHeight * 0.4
+					tileImage.displayWidth * 0.37,
+					tileImage.displayHeight * 0.37
 				);
 				const bottomPoint = new Phaser.Geom.Point(0, tileImage.displayHeight / 2 + NUDGE);
 				const bottomLeftPoint = new Phaser.Geom.Point(
-					-tileImage.displayWidth * 0.4,
-					tileImage.displayHeight * 0.4
+					-tileImage.displayWidth * 0.37,
+					tileImage.displayHeight * 0.37
 				);
 				const leftPoint = new Phaser.Geom.Point(-tileImage.displayWidth / 2 - NUDGE, 0);
 				const topLeftPoint = new Phaser.Geom.Point(
-					-tileImage.displayWidth * 0.4,
-					-tileImage.displayHeight * 0.4
+					-tileImage.displayWidth * 0.37,
+					-tileImage.displayHeight * 0.37
 				);
 				tileContainer
 					.setInteractive(
