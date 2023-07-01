@@ -57,6 +57,9 @@ export default class BoardScene extends Phaser.Scene {
 			const keyObj = this.input.keyboard.addKey("E"); // Get key object
 			keyObj.on("down", this.handleGameEnd, this);
 		}
+		this.input.on("pointerdown", () => {
+			this.isDragging = true;
+		});
 
 		// initialize variables
 		const gameWidth = this.game.config.width;
@@ -248,6 +251,10 @@ export default class BoardScene extends Phaser.Scene {
 						]),
 						Phaser.Geom.Polygon.Contains
 					)
+					.on("pointerdown", () => {
+						this.isDragging = true;
+						this.handleAddToChain(tile);
+					})
 					.on("pointerover", () => {
 						this.handleAddToChain(tile);
 					});
@@ -303,7 +310,10 @@ export default class BoardScene extends Phaser.Scene {
 	}
 
 	handleAddToChain(tile: Tile) {
-		this.isDragging = true;
+		if (!this.isDragging) {
+			return;
+		}
+
 		if (this.currentChain.includes(tile)) {
 			if (DEBUG) console.debug("Duplicate tile detected, ignoring...");
 			return;
