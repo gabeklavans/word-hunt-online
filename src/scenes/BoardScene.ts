@@ -215,19 +215,41 @@ export default class BoardScene extends Phaser.Scene {
 				const NUDGE = 2;
 				// NOTE: The Point coords are relative to the CENTER of the tile image
 				const topPoint = new Phaser.Geom.Point(0, -tileImage.displayHeight / 2 - NUDGE);
+				const topRightPoint = new Phaser.Geom.Point(
+					tileImage.displayWidth * 0.4,
+					-tileImage.displayHeight * 0.4
+				);
 				const rightPoint = new Phaser.Geom.Point(tileImage.displayWidth / 2 + NUDGE, 0);
+				const bottomRightPoint = new Phaser.Geom.Point(
+					tileImage.displayWidth * 0.4,
+					tileImage.displayHeight * 0.4
+				);
 				const bottomPoint = new Phaser.Geom.Point(0, tileImage.displayHeight / 2 + NUDGE);
+				const bottomLeftPoint = new Phaser.Geom.Point(
+					-tileImage.displayWidth * 0.4,
+					tileImage.displayHeight * 0.4
+				);
 				const leftPoint = new Phaser.Geom.Point(-tileImage.displayWidth / 2 - NUDGE, 0);
+				const topLeftPoint = new Phaser.Geom.Point(
+					-tileImage.displayWidth * 0.4,
+					-tileImage.displayHeight * 0.4
+				);
 				tileContainer
 					.setInteractive(
-						new Phaser.Geom.Polygon([topPoint, rightPoint, bottomPoint, leftPoint]),
+						new Phaser.Geom.Polygon([
+							topPoint,
+							topRightPoint,
+							rightPoint,
+							bottomRightPoint,
+							bottomPoint,
+							bottomLeftPoint,
+							leftPoint,
+							topLeftPoint,
+						]),
 						Phaser.Geom.Polygon.Contains
 					)
 					.on("pointerover", () => {
 						this.handleAddToChain(tile);
-					})
-					.on("pointerdown", () => {
-						this.startChain(tile);
 					});
 
 				if (DEBUG) {
@@ -281,43 +303,43 @@ export default class BoardScene extends Phaser.Scene {
 	}
 
 	handleAddToChain(tile: Tile) {
-		if (this.isDragging) {
-			if (!this.currentChain.includes(tile)) {
-				// check for skipped tiles and fill them in for the player
-				const lastTileInChain =
-					this.currentChain.length > 0
-						? this.currentChain[this.currentChain.length - 1]
-						: undefined;
-				if (
-					lastTileInChain &&
-					Phaser.Math.Distance.Between(
-						lastTileInChain.row,
-						lastTileInChain.col,
-						tile.row,
-						tile.col
-					) > Math.sqrt(2)
-				) {
-					if (!lastTileInChain.container || !tile.container) {
-						console.error("Containers not initialized");
-						// TODO: Error scene
-						this.game.destroy(true, true);
-						return;
-					}
-
-					if (DEBUG) {
-						console.debug("Skipped tile detected!");
-					}
-
-					// just skip this tile, wait for user to hit a valid one
+		this.isDragging = true;
+		if (!this.currentChain.includes(tile)) {
+			// check for skipped tiles and fill them in for the player
+			const lastTileInChain =
+				this.currentChain.length > 0
+					? this.currentChain[this.currentChain.length - 1]
+					: undefined;
+			if (
+				lastTileInChain &&
+				Phaser.Math.Distance.Between(
+					lastTileInChain.row,
+					lastTileInChain.col,
+					tile.row,
+					tile.col
+				) > Math.sqrt(2)
+			) {
+				if (!lastTileInChain.container || !tile.container) {
+					console.error("Containers not initialized");
+					// TODO: Error scene
+					this.game.destroy(true, true);
 					return;
+				}
 
-					/**
-					 * NOTE: This auto-fill-skipped tiles code actually kinda works,
-					 * but it has weird edge-cases that I think are not worth trying
-					 * to figure out how to reconcile in an intuitive way.
-					 * Now you can peruse it as a relic of a forlorn idea.
-					 */
-					/*
+				if (DEBUG) {
+					console.debug("Skipped tile detected!");
+				}
+
+				// just skip this tile, wait for user to hit a valid one
+				return;
+
+				/**
+				 * NOTE: This auto-fill-skipped tiles code actually kinda works,
+				 * but it has weird edge-cases that I think are not worth trying
+				 * to figure out how to reconcile in an intuitive way.
+				 * Now you can peruse it as a relic of a forlorn idea.
+				 */
+				/*
 					// draw a line and fill in the intersected tiles
 					const intersectLine = new Phaser.Geom.Line(
 						lastTileInChain.container.x,
@@ -350,13 +372,12 @@ export default class BoardScene extends Phaser.Scene {
 						}
 					}
 					*/
-				}
-
-				this.addToChain(tile);
-			} else if (this.currentChain.length > 1) {
-				// needs a > 1 check cause touch events happen too fast
-				this.endChain();
 			}
+
+			this.addToChain(tile);
+		} else if (this.currentChain.length > 1) {
+			// needs a > 1 check cause touch events happen too fast
+			this.endChain();
 		}
 	}
 
