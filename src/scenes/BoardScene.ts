@@ -287,7 +287,6 @@ export default class BoardScene extends Phaser.Scene {
 					),
 					pointExitRect
 				)
-				.on("pointerover", () => this.endChain())
 				.setDepth(-1);
 
 			if (DEBUG) {
