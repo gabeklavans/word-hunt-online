@@ -23,6 +23,11 @@ export default class BoardScene extends Phaser.Scene {
 
 	curScore = 0;
 
+	// audio
+	dragSfx!: Phaser.Sound.BaseSound;
+	goodSfx!: Phaser.Sound.BaseSound;
+	badSfx!: Phaser.Sound.BaseSound;
+
 	// numbers
 	TILE_SIZE!: number;
 	readonly GRID_SIZE = 4;
@@ -69,6 +74,9 @@ export default class BoardScene extends Phaser.Scene {
 				: gameWidth / (this.GRID_SIZE + 1);
 		this.imageGroup = this.add.group();
 		this.tileContainerGroup = this.add.group();
+		this.dragSfx = this.sound.add("drag");
+		this.goodSfx = this.sound.add("good");
+		this.badSfx = this.sound.add("bad");
 
 		// global input listeners
 		this.input.addListener("pointerup", () => {
@@ -347,6 +355,8 @@ export default class BoardScene extends Phaser.Scene {
 
 	addToChain(tile: Tile) {
 		if (!this.currentChain.includes(tile)) {
+			this.dragSfx.play();
+
 			this.currentChain.push(tile);
 			const curWord = this.currentChain.map((tile) => tile.letter).join("");
 			const curWordScore = getWordScore(curWord);
@@ -436,8 +446,10 @@ export default class BoardScene extends Phaser.Scene {
 			this.imageGroup.setTint(this.IDLE_COLOR);
 
 			const word = this.currentChain.map((tile) => tile.letter).join("");
-			if (!this.foundWords.has(word)) {
-				if (this.boardWords.has(word)) {
+			if (this.boardWords.has(word)) {
+				if (!this.foundWords.has(word)) {
+					this.goodSfx.play("", { volume: 0.5 });
+
 					const wordScore = getWordScore(word);
 					if (DEBUG) {
 						console.debug(`Found word "${word}" of score: ${wordScore}`);
@@ -461,8 +473,7 @@ export default class BoardScene extends Phaser.Scene {
 					};
 				}
 			} else {
-				// TODO: do some already found effect on the chain
-				// Future Gabe: do I actually wanna do that..?
+				this.badSfx.play();
 			}
 
 			this.currentChain = [];
