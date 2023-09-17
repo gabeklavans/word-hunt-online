@@ -1,21 +1,23 @@
+import { GameObjects, Scene, Time, Sound, Display, Geom, Math as PMath, BlendModes } from "phaser";
+
 import { DEBUG } from "../env";
 import eventsCenter, { WHOEvents } from "../WHOEvents";
 import { GOOD_COLOR, SESSION_ID, USER_ID } from "../Main";
 import { getWordScore, pointExitRect } from "../utils";
 import { getBoardData, sendResults } from "../api";
 
-export default class BoardScene extends Phaser.Scene {
-	imageGroup!: Phaser.GameObjects.Group;
-	tileContainerGroup!: Phaser.GameObjects.Group;
-	gameTimeText!: Phaser.GameObjects.BitmapText;
-	chainText!: Phaser.GameObjects.BitmapText;
-	chainScoreText!: Phaser.GameObjects.BitmapText;
+export class BoardScene extends Scene {
+	imageGroup!: GameObjects.Group;
+	tileContainerGroup!: GameObjects.Group;
+	gameTimeText!: GameObjects.BitmapText;
+	chainText!: GameObjects.BitmapText;
+	chainScoreText!: GameObjects.BitmapText;
 	gameTimeTextPrefix = "⏳";
-	gameTimer?: Phaser.Time.TimerEvent;
+	gameTimer?: Time.TimerEvent;
 	tileGrid: Tile[][] = [];
 
 	currentChain: Tile[] = [];
-	chainLineGraphic!: Phaser.GameObjects.Graphics;
+	chainLineGraphic!: GameObjects.Graphics;
 	foundWords: Set<string> = new Set();
 
 	isDragging = false;
@@ -24,9 +26,9 @@ export default class BoardScene extends Phaser.Scene {
 	curScore = 0;
 
 	// audio
-	dragSfx!: Phaser.Sound.BaseSound;
-	goodSfx!: Phaser.Sound.BaseSound;
-	badSfx!: Phaser.Sound.BaseSound;
+	dragSfx!: Sound.BaseSound;
+	goodSfx!: Sound.BaseSound;
+	badSfx!: Sound.BaseSound;
 
 	// numbers
 	TILE_SIZE!: number;
@@ -59,8 +61,12 @@ export default class BoardScene extends Phaser.Scene {
 		// events
 		eventsCenter.on(WHOEvents.GameStart, this.handleGameStart, this);
 		if (DEBUG) {
-			const keyObj = this.input.keyboard.addKey("E"); // Get key object
-			keyObj.on("down", this.handleGameEnd, this);
+			if (!this.input.keyboard) {
+				console.warn("Couldn't find keyboard!");
+			} else {
+				const keyObj = this.input.keyboard.addKey("E"); // Get key object
+				keyObj.on("down", this.handleGameEnd, this);
+			}
 		}
 		this.input.on("pointerdown", () => {
 			this.isDragging = true;
@@ -128,7 +134,7 @@ export default class BoardScene extends Phaser.Scene {
 			.bitmapText(0, 0, "gothic", "", this.chainText.fontSize * 0.5)
 			.setTintFill(0x000000)
 			.setOrigin(0.5, 0.5);
-		Phaser.Display.Align.To.BottomCenter(this.chainScoreText, this.chainText, 0, 40);
+		Display.Align.To.BottomCenter(this.chainScoreText, this.chainText, 0, 40);
 
 		if (DEBUG) {
 			this.gameTimeText.setInteractive().on("pointerdown", this.handleGameEnd, this);
@@ -149,9 +155,7 @@ export default class BoardScene extends Phaser.Scene {
 
 	updateChainColors(color: number) {
 		this.currentChain.forEach((tile) =>
-			(tile.container.getByName(this.TILE_IMAGE_KEY) as Phaser.GameObjects.Image).setTint(
-				color
-			)
+			(tile.container.getByName(this.TILE_IMAGE_KEY) as GameObjects.Image).setTint(color)
 		);
 	}
 
@@ -225,29 +229,29 @@ export default class BoardScene extends Phaser.Scene {
 				// enable hitboxes on tiles
 				const NUDGE = 2;
 				// NOTE: The Point coords are relative to the CENTER of the tile image
-				const topPoint = new Phaser.Geom.Point(0, -tileImage.displayHeight / 2 - NUDGE);
-				const topRightPoint = new Phaser.Geom.Point(
+				const topPoint = new Geom.Point(0, -tileImage.displayHeight / 2 - NUDGE);
+				const topRightPoint = new Geom.Point(
 					tileImage.displayWidth * 0.37,
 					-tileImage.displayHeight * 0.37
 				);
-				const rightPoint = new Phaser.Geom.Point(tileImage.displayWidth / 2 + NUDGE, 0);
-				const bottomRightPoint = new Phaser.Geom.Point(
+				const rightPoint = new Geom.Point(tileImage.displayWidth / 2 + NUDGE, 0);
+				const bottomRightPoint = new Geom.Point(
 					tileImage.displayWidth * 0.37,
 					tileImage.displayHeight * 0.37
 				);
-				const bottomPoint = new Phaser.Geom.Point(0, tileImage.displayHeight / 2 + NUDGE);
-				const bottomLeftPoint = new Phaser.Geom.Point(
+				const bottomPoint = new Geom.Point(0, tileImage.displayHeight / 2 + NUDGE);
+				const bottomLeftPoint = new Geom.Point(
 					-tileImage.displayWidth * 0.37,
 					tileImage.displayHeight * 0.37
 				);
-				const leftPoint = new Phaser.Geom.Point(-tileImage.displayWidth / 2 - NUDGE, 0);
-				const topLeftPoint = new Phaser.Geom.Point(
+				const leftPoint = new Geom.Point(-tileImage.displayWidth / 2 - NUDGE, 0);
+				const topLeftPoint = new Geom.Point(
 					-tileImage.displayWidth * 0.37,
 					-tileImage.displayHeight * 0.37
 				);
 				tileContainer
 					.setInteractive(
-						new Phaser.Geom.Polygon([
+						new Geom.Polygon([
 							topPoint,
 							topRightPoint,
 							rightPoint,
@@ -257,7 +261,7 @@ export default class BoardScene extends Phaser.Scene {
 							leftPoint,
 							topLeftPoint,
 						]),
-						Phaser.Geom.Polygon.Contains
+						Geom.Polygon.Contains
 					)
 					.on("pointerdown", () => {
 						this.isDragging = true;
@@ -287,7 +291,7 @@ export default class BoardScene extends Phaser.Scene {
 				)
 				.setOrigin(0, 0)
 				.setInteractive(
-					new Phaser.Geom.Rectangle(
+					new Geom.Rectangle(
 						topLeftContainer.getBounds().x,
 						topLeftContainer.getBounds().y,
 						this.TILE_SIZE * this.GRID_SIZE,
@@ -330,12 +334,8 @@ export default class BoardScene extends Phaser.Scene {
 
 		const isTileReachable =
 			lastTileInChain &&
-			Phaser.Math.Distance.Between(
-				lastTileInChain.row,
-				lastTileInChain.col,
-				tile.row,
-				tile.col
-			) <= Math.sqrt(2);
+			PMath.Distance.Between(lastTileInChain.row, lastTileInChain.col, tile.row, tile.col) <=
+				Math.sqrt(2);
 		if (lastTileInChain && !isTileReachable) {
 			if ((lastTileInChain && !lastTileInChain.container) || !tile.container) {
 				console.error("Containers not initialized");
@@ -371,7 +371,7 @@ export default class BoardScene extends Phaser.Scene {
 					displayHeight: { value: this.TILE_SIZE + GROWTH, duration: 200 },
 					displayWidth: { value: this.TILE_SIZE + GROWTH, duration: 200 },
 				},
-				ease: Phaser.Math.Easing.Bounce.Out,
+				ease: PMath.Easing.Bounce.Out,
 				paused: false,
 			});
 
@@ -398,7 +398,7 @@ export default class BoardScene extends Phaser.Scene {
 		this.chainLineGraphic.clear();
 		this.chainLineGraphic.lineStyle(this.LINE_THICKNESS, this.NEUTRAL_LINE_COLOR);
 		this.chainLineGraphic.fillStyle(this.NEUTRAL_LINE_COLOR);
-		this.chainLineGraphic.setBlendMode(Phaser.BlendModes.DIFFERENCE);
+		this.chainLineGraphic.setBlendMode(BlendModes.DIFFERENCE);
 
 		let prevTile: Tile;
 		this.currentChain.forEach((tile) => {
@@ -427,13 +427,13 @@ export default class BoardScene extends Phaser.Scene {
 				alpha: {
 					value: 0,
 					duration: 100,
-					ease: Phaser.Math.Easing.Linear,
+					ease: PMath.Easing.Linear,
 				},
 			},
 			paused: true,
 			onComplete: (tween, targets) => {
-				targets.forEach((text) =>
-					(text as Phaser.GameObjects.BitmapText).setText("").setAlpha(1).setScale(1)
+				targets.forEach((text: GameObjects.BitmapText) =>
+					text.setText("").setAlpha(1).setScale(1)
 				);
 			},
 		});
@@ -464,7 +464,7 @@ export default class BoardScene extends Phaser.Scene {
 							scale: {
 								value: "+=0.3",
 								duration: 100,
-								ease: (v: number) => Phaser.Math.Easing.Back.Out(v, 5),
+								ease: (v: number) => PMath.Easing.Back.Out(v, 5),
 							},
 						},
 						onComplete: () => fadeTween.play(),
@@ -480,7 +480,7 @@ export default class BoardScene extends Phaser.Scene {
 		this.chainLineGraphic.clear();
 		this.tweens.killAll();
 		this.imageGroup.getChildren().forEach((tileImage) => {
-			(tileImage as Phaser.GameObjects.Image).setDisplaySize(this.TILE_SIZE, this.TILE_SIZE);
+			(tileImage as GameObjects.Image).setDisplaySize(this.TILE_SIZE, this.TILE_SIZE);
 		});
 
 		chainTextAnim();

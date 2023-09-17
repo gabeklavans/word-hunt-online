@@ -1,8 +1,8 @@
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 
-import PreloaderScene from "./scenes/PreloaderScene";
-import BoardScene from "./scenes/BoardScene";
-import SplashScene from "./scenes/SplashScene";
+import {PreloaderScene} from "./scenes/PreloaderScene";
+import {BoardScene} from "./scenes/BoardScene";
+import {SplashScene} from "./scenes/SplashScene";
 
 export const BAD_COLOR = 0xff0000;
 export const GOOD_COLOR = 0x00ff00;
