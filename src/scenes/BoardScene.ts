@@ -427,26 +427,23 @@ export class BoardScene extends Phaser.Scene {
 	}
 
 	endChain() {
-		const fadeTween = this.tweens.add({
-			targets: [this.chainText, this.chainScoreText],
-			props: {
-				alpha: {
-					value: 0,
-					duration: 100,
-					ease: Phaser.Math.Easing.Linear,
+		const tweenChain: Phaser.Types.Tweens.TweenBuilderConfig[] = [
+			{
+				targets: [this.chainText, this.chainScoreText],
+				props: {
+					alpha: {
+						value: 0,
+						duration: 100,
+						ease: Phaser.Math.Easing.Linear,
+					},
+				},
+				onComplete: (_tween, targets) => {
+					targets.forEach((text: Phaser.GameObjects.BitmapText) =>
+						text.setText("").setAlpha(1).setScale(1)
+					);
 				},
 			},
-			paused: true,
-			onComplete: (tween, targets) => {
-				targets.forEach((text: Phaser.GameObjects.BitmapText) =>
-					text.setText("").setAlpha(1).setScale(1)
-				);
-			},
-		});
-
-		let chainTextAnim = () => {
-			fadeTween.play();
-		};
+		];
 
 		if (this.isDragging) {
 			this.imageGroup.setTint(this.IDLE_COLOR);
@@ -463,19 +460,16 @@ export class BoardScene extends Phaser.Scene {
 				this.foundWords.add(word);
 
 				// found word animation
-				chainTextAnim = () => {
-					this.tweens.add({
-						targets: [this.chainText, this.chainScoreText],
-						props: {
-							scale: {
-								value: "+=0.3",
-								duration: 100,
-								ease: (v: number) => Phaser.Math.Easing.Back.Out(v, 5),
-							},
+				tweenChain.unshift({
+					targets: [this.chainText, this.chainScoreText],
+					props: {
+						scale: {
+							value: "+=0.3",
+							duration: 100,
+							ease: (v: number) => Phaser.Math.Easing.Back.Out(v, 5),
 						},
-						onComplete: () => fadeTween.play(),
-					});
-				};
+					},
+				});
 			} else {
 				this.badSfx.play({ volume: 0.1, rate: 1.5 });
 			}
@@ -489,7 +483,9 @@ export class BoardScene extends Phaser.Scene {
 			(tileImage as Phaser.GameObjects.Image).setDisplaySize(this.TILE_SIZE, this.TILE_SIZE);
 		});
 
-		chainTextAnim();
+		this.tweens.chain({
+			tweens: tweenChain,
+		});
 
 		if (DEBUG) {
 			console.debug(`cur score: ${this.curScore}`);
