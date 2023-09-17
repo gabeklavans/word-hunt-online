@@ -11,9 +11,9 @@ export default class Preloader extends Phaser.Scene {
 			"https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/assets/fonts/gothic.xml"
 		);
 
-		this.load.audio("drag", "assets/sfx/Select.mp3");
-		this.load.audio("good", "assets/sfx/Bing.mp3");
-		this.load.audio("bad", "assets/sfx/chain-end-bad.mp3");
+		this.load.audio("drag", "assets/sfx/drag.mp3");
+		this.load.audio("good", "assets/sfx/bing.mp3");
+		this.load.audio("bad", "assets/sfx/bonk.mp3");
 	}
 
 	create(): void {

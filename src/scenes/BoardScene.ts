@@ -355,7 +355,7 @@ export default class BoardScene extends Phaser.Scene {
 
 	addToChain(tile: Tile) {
 		if (!this.currentChain.includes(tile)) {
-			this.dragSfx.play({ volume: 0.11, rate: 1 });
+			this.dragSfx.play({ volume: 0.08, rate: 1.5 });
 
 			this.currentChain.push(tile);
 			const curWord = this.currentChain.map((tile) => tile.letter).join("");
@@ -448,7 +448,7 @@ export default class BoardScene extends Phaser.Scene {
 			const word = this.currentChain.map((tile) => tile.letter).join("");
 			if (this.boardWords.has(word)) {
 				if (!this.foundWords.has(word)) {
-					this.goodSfx.play({ volume: 0.05 });
+					this.goodSfx.play({ volume: 0.15 });
 
 					const wordScore = getWordScore(word);
 					if (DEBUG) {
@@ -473,7 +473,7 @@ export default class BoardScene extends Phaser.Scene {
 					};
 				}
 			} else {
-				this.badSfx.play({ volume: 0.25 });
+				this.badSfx.play({ volume: 0.1, rate: 1.5 });
 			}
 
 			this.currentChain = [];
