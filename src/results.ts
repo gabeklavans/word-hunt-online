@@ -23,7 +23,7 @@ let showAllWords: boolean;
 
 setInterval(checkForUpdatedSession, CHECK_UPDATE_INTERVAL_MS);
 
-document.getElementById("left-button")?.addEventListener("pointerdown", (event) => {
+document.getElementById("left-button")?.addEventListener("pointerdown", () => {
 	if (otherPlayerIdx <= 0) {
 		console.warn("Somehow tried to reduce below first player");
 		return;
@@ -33,7 +33,7 @@ document.getElementById("left-button")?.addEventListener("pointerdown", (event) 
 	updateOtherPlayerColumn();
 });
 
-document.getElementById("right-button")?.addEventListener("pointerdown", (event) => {
+document.getElementById("right-button")?.addEventListener("pointerdown", () => {
 	if (otherPlayerIdx >= Object.keys(session.scoredUsers).length - 1) {
 		console.warn("Somehow tried to increase past the last player");
 		return;

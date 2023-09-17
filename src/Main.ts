@@ -1,9 +1,8 @@
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 
-import PreloaderScene from "./scenes/PreloaderScene";
-import BoardScene from "./scenes/BoardScene";
-import SplashScene from "./scenes/SplashScene";
-import ResultScene from "./scenes/ResultScene";
+import {PreloaderScene} from "./scenes/PreloaderScene";
+import {BoardScene} from "./scenes/BoardScene";
+import {SplashScene} from "./scenes/SplashScene";
 
 export const BAD_COLOR = 0xff0000;
 export const GOOD_COLOR = 0x00ff00;
@@ -34,7 +33,7 @@ const config: Phaser.Types.Core.GameConfig = {
 			gravity: { x: 0, y: 0 },
 		},
 	},
-	scene: [PreloaderScene, BoardScene, SplashScene, ResultScene],
+	scene: [PreloaderScene, BoardScene, SplashScene],
 	transparent: true,
 	// backgroundColor: 0x000fff,
 };

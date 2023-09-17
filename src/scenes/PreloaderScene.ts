@@ -1,11 +1,12 @@
-export default class Preloader extends Phaser.Scene {
+import { Scene } from "phaser";
+
+export class PreloaderScene extends Scene {
 	constructor() {
 		super("preloader");
 	}
 
 	preload(): void {
 		this.load.image("acho", "assets/acho.png");
-		this.load.image("arrow-right", "assets/arrow copy.png");
 		this.load.bitmapFont(
 			"gothic",
 			"https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/assets/fonts/gothic.png",
@@ -13,8 +14,8 @@ export default class Preloader extends Phaser.Scene {
 		);
 
 		this.load.audio("drag", "assets/sfx/drag.mp3");
-		this.load.audio("good", "assets/sfx/chain-end-good.mp3");
-		this.load.audio("bad", "assets/sfx/chain-end-bad.mp3");
+		this.load.audio("good", "assets/sfx/bing.mp3");
+		this.load.audio("bad", "assets/sfx/bonk.mp3");
 	}
 
 	create(): void {

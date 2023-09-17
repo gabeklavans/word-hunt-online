@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 
 export default class Ellipsis {
 	static create(scene: Phaser.Scene, x: number, y: number, color = 0xffffff) {

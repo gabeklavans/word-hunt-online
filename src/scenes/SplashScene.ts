@@ -1,14 +1,16 @@
+import { Scene, GameObjects } from "phaser";
+
 import { BAD_COLOR, GOOD_COLOR, SESSION_ID, USER_ID } from "../Main";
 import eventsCenter, { WHOEvents } from "../WHOEvents";
 import { notifyPlayerStarted } from "../api";
 import CircleBars from "../spinners/basic/CircleBars";
 
-export default class SplashScene extends Phaser.Scene {
+export class SplashScene extends Scene {
 	boardDone = false;
 
-	startButtonContainer!: Phaser.GameObjects.Container;
-	startButton!: Phaser.GameObjects.Rectangle;
-	startButtonText!: Phaser.GameObjects.BitmapText;
+	startButtonContainer!: GameObjects.Container;
+	startButton!: GameObjects.Rectangle;
+	startButtonText!: GameObjects.BitmapText;
 	circleBarsSpinner!: CircleBars;
 
 	constructor() {
