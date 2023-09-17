@@ -446,32 +446,30 @@ export default class BoardScene extends Phaser.Scene {
 			this.imageGroup.setTint(this.IDLE_COLOR);
 
 			const word = this.currentChain.map((tile) => tile.letter).join("");
-			if (this.boardWords.has(word)) {
-				if (!this.foundWords.has(word)) {
-					this.goodSfx.play({ volume: 0.15 });
+			if (this.boardWords.has(word) && !this.foundWords.has(word)) {
+				this.goodSfx.play({ volume: 0.15 });
 
-					const wordScore = getWordScore(word);
-					if (DEBUG) {
-						console.debug(`Found word "${word}" of score: ${wordScore}`);
-					}
-					this.curScore += wordScore;
-					this.foundWords.add(word);
-
-					// found word animation
-					chainTextAnim = () => {
-						this.tweens.add({
-							targets: [this.chainText, this.chainScoreText],
-							props: {
-								scale: {
-									value: "+=0.3",
-									duration: 100,
-									ease: (v: number) => Phaser.Math.Easing.Back.Out(v, 5),
-								},
-							},
-							onComplete: () => fadeTween.play(),
-						});
-					};
+				const wordScore = getWordScore(word);
+				if (DEBUG) {
+					console.debug(`Found word "${word}" of score: ${wordScore}`);
 				}
+				this.curScore += wordScore;
+				this.foundWords.add(word);
+
+				// found word animation
+				chainTextAnim = () => {
+					this.tweens.add({
+						targets: [this.chainText, this.chainScoreText],
+						props: {
+							scale: {
+								value: "+=0.3",
+								duration: 100,
+								ease: (v: number) => Phaser.Math.Easing.Back.Out(v, 5),
+							},
+						},
+						onComplete: () => fadeTween.play(),
+					});
+				};
 			} else {
 				this.badSfx.play({ volume: 0.1, rate: 1.5 });
 			}
