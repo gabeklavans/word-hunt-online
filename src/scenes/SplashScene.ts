@@ -3,7 +3,8 @@ import { Scene, GameObjects } from "phaser";
 import { BAD_COLOR, GOOD_COLOR, SESSION_ID, USER_ID } from "../Main";
 import eventsCenter, { WHOEvents } from "../WHOEvents";
 import { notifyPlayerStarted } from "../api";
-import CircleBars from "../spinners/basic/CircleBars";
+
+const spinner = document.getElementsByClassName("lds-spinner")[0];
 
 export class SplashScene extends Scene {
 	boardDone = false;
@@ -11,7 +12,6 @@ export class SplashScene extends Scene {
 	startButtonContainer!: GameObjects.Container;
 	startButton!: GameObjects.Rectangle;
 	startButtonText!: GameObjects.BitmapText;
-	circleBarsSpinner!: CircleBars;
 
 	constructor() {
 		super({ key: "splash" });
@@ -63,14 +63,6 @@ export class SplashScene extends Scene {
 			.add(this.startButtonText)
 			.setDepth(3);
 
-		this.circleBarsSpinner = CircleBars.create(
-			this,
-			this.cameras.main.centerX,
-			this.cameras.main.centerY,
-			50,
-			0x000000
-		).play();
-
 		this.scene.launch("board");
 	}
 
@@ -87,7 +79,6 @@ export class SplashScene extends Scene {
 			this.startButton.fillColor = GOOD_COLOR;
 		}
 		this.boardDone = true;
-		// "delete" the spinner
-		this.circleBarsSpinner.setPosition(2000, 2000);
+		(spinner as HTMLDivElement).style.display = "none";
 	}
 }
