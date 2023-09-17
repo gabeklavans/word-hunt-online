@@ -5,7 +5,6 @@ export default class Preloader extends Phaser.Scene {
 
 	preload(): void {
 		this.load.image("acho", "assets/acho.png");
-		this.load.image("arrow-right", "assets/arrow copy.png");
 		this.load.bitmapFont(
 			"gothic",
 			"https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/assets/fonts/gothic.png",
