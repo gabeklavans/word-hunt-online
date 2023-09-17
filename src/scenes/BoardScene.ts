@@ -155,7 +155,9 @@ export class BoardScene extends Phaser.Scene {
 
 	updateChainColors(color: number) {
 		this.currentChain.forEach((tile) =>
-			(tile.container.getByName(this.TILE_IMAGE_KEY) as Phaser.GameObjects.Image).setTint(color)
+			(tile.container.getByName(this.TILE_IMAGE_KEY) as Phaser.GameObjects.Image).setTint(
+				color
+			)
 		);
 	}
 
@@ -334,8 +336,12 @@ export class BoardScene extends Phaser.Scene {
 
 		const isTileReachable =
 			lastTileInChain &&
-			Phaser.Math.Distance.Between(lastTileInChain.row, lastTileInChain.col, tile.row, tile.col) <=
-				Math.sqrt(2);
+			Phaser.Math.Distance.Between(
+				lastTileInChain.row,
+				lastTileInChain.col,
+				tile.row,
+				tile.col
+			) <= Math.sqrt(2);
 		if (lastTileInChain && !isTileReachable) {
 			if ((lastTileInChain && !lastTileInChain.container) || !tile.container) {
 				console.error("Containers not initialized");
