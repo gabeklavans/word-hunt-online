@@ -29,6 +29,7 @@ export class BoardScene extends Phaser.Scene {
 	dragSfx!: Phaser.Sound.BaseSound;
 	goodSfx!: Phaser.Sound.BaseSound;
 	badSfx!: Phaser.Sound.BaseSound;
+	foundSfx!: Phaser.Sound.BaseSound;
 
 	// numbers
 	TILE_SIZE!: number;
@@ -83,6 +84,7 @@ export class BoardScene extends Phaser.Scene {
 		this.dragSfx = this.sound.add("drag");
 		this.goodSfx = this.sound.add("good");
 		this.badSfx = this.sound.add("bad");
+		this.foundSfx = this.sound.add("found");
 
 		// global input listeners
 		this.input.addListener("pointerup", () => {
@@ -361,8 +363,6 @@ export class BoardScene extends Phaser.Scene {
 
 	addToChain(tile: Tile) {
 		if (!this.currentChain.includes(tile)) {
-			this.dragSfx.play({ volume: 0.08, rate: 1.5 });
-
 			this.currentChain.push(tile);
 			const curWord = this.currentChain.map((tile) => tile.letter).join("");
 			const curWordScore = getWordScore(curWord);
@@ -382,21 +382,30 @@ export class BoardScene extends Phaser.Scene {
 			});
 
 			const word = this.currentChain.map((tile) => tile.letter).join("");
-			if (this.foundWords.has(word)) {
-				this.updateChainColors(this.REPEAT_COLOR);
-				this.chainText.setTint(this.REPEAT_COLOR);
-				this.chainScoreText.setText("");
-			} else if (this.boardWords.has(word)) {
+
+			// found a new valid word
+			if (this.boardWords.has(word) && !this.foundWords.has(word)) {
 				this.updateChainColors(GOOD_COLOR);
 				this.chainText.setTint(GOOD_COLOR);
 				if (curWordScore > 0) {
 					this.chainScoreText.setText(`+ ${curWordScore}`);
 				}
+				this.foundSfx.play({ volume: 0.1 });
+
+				return;
+			}
+
+			// found something else
+			if (this.foundWords.has(word)) {
+				this.updateChainColors(this.REPEAT_COLOR);
+				this.chainText.setTint(this.REPEAT_COLOR);
 			} else {
 				this.updateChainColors(this.DRAG_COLOR);
 				this.chainText.setTint(0x000000);
-				this.chainScoreText.setText("");
 			}
+
+			this.chainScoreText.setText("");
+			this.dragSfx.play({ volume: 0.08, rate: 1.5 });
 		}
 	}
 

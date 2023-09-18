@@ -16,6 +16,7 @@ export class PreloaderScene extends Scene {
 		this.load.audio("drag", "assets/sfx/drag.mp3");
 		this.load.audio("good", "assets/sfx/bing.mp3");
 		this.load.audio("bad", "assets/sfx/bonk.mp3");
+		this.load.audio("found", "assets/sfx/beng.mp3");
 	}
 
 	create(): void {
