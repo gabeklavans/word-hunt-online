@@ -28,6 +28,8 @@ document.getElementById("left-button")?.addEventListener("pointerdown", () => {
 		console.warn("Somehow tried to reduce below first player");
 		return;
 	}
+	
+	new Audio("assets/sfx/drag.mp3").play();
 
 	otherPlayerIdx--;
 	updateOtherPlayerColumn();
@@ -39,8 +41,9 @@ document.getElementById("right-button")?.addEventListener("pointerdown", () => {
 		return;
 	}
 
-	otherPlayerIdx++;
+	new Audio("assets/sfx/drag.mp3").play();
 
+	otherPlayerIdx++;
 	updateOtherPlayerColumn();
 });
 
