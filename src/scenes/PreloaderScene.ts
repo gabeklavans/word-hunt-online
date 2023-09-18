@@ -13,7 +13,7 @@ export class PreloaderScene extends Scene {
 			"https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/assets/fonts/gothic.xml"
 		);
 
-		this.load.audio("start", "assets/sfx/mc-dmg.mp3");
+		this.load.audio("start", "assets/sfx/start.mp3");
 		this.load.audio("end", "assets/sfx/vine-boom.mp3");
 		this.load.audio("drag", "assets/sfx/drag.mp3");
 		this.load.audio("good", "assets/sfx/bing.mp3");
