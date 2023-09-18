@@ -67,6 +67,7 @@ export class SplashScene extends Scene {
 	}
 
 	async startButtonHandler() {
+		this.sound.add("start").play({ volume: 0.05 });
 		eventsCenter.emit(WHOEvents.GameStart);
 		// TODO: null handle
 		await notifyPlayerStarted(SESSION_ID as string, USER_ID as string);
