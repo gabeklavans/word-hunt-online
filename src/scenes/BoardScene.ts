@@ -11,6 +11,7 @@ export class BoardScene extends Phaser.Scene {
 	tileContainerGroup!: Phaser.GameObjects.Group;
 	gameTimeText!: Phaser.GameObjects.BitmapText;
 	chainText!: Phaser.GameObjects.BitmapText;
+	scoreText!: Phaser.GameObjects.BitmapText;
 	chainScoreText!: Phaser.GameObjects.BitmapText;
 	gameTimeTextPrefix = "⏳";
 	gameTimer?: Phaser.Time.TimerEvent;
@@ -124,7 +125,7 @@ export class BoardScene extends Phaser.Scene {
 		this.chainText = this.add
 			.bitmapText(
 				this.cameras.main.centerX,
-				140,
+				130,
 				"gothic",
 				"",
 				this.gameTimeText.fontSize / 2
@@ -133,10 +134,16 @@ export class BoardScene extends Phaser.Scene {
 			.setOrigin(0.5, 0.5);
 
 		this.chainScoreText = this.add
-			.bitmapText(0, 0, "gothic", "", this.chainText.fontSize * 0.5)
+			.bitmapText(0, 0, "gothic", "", this.chainText.fontSize / 2)
 			.setTintFill(0x000000)
 			.setOrigin(0.5, 0.5);
 		Phaser.Display.Align.To.BottomCenter(this.chainScoreText, this.chainText, 0, 40);
+
+		this.scoreText = this.add
+			.bitmapText(0, 0, "gothic", "0", this.chainText.fontSize)
+			.setTintFill(0x000000)
+			.setOrigin(0.5, 0.5);
+		Phaser.Display.Align.To.BottomCenter(this.scoreText, this.chainScoreText, 0, 10);
 
 		if (DEBUG) {
 			this.gameTimeText.setInteractive().on("pointerdown", this.handleGameEnd, this);
@@ -466,6 +473,7 @@ export class BoardScene extends Phaser.Scene {
 					console.debug(`Found word "${word}" of score: ${wordScore}`);
 				}
 				this.curScore += wordScore;
+				this.scoreText.text = this.curScore.toString();
 				this.foundWords.add(word);
 
 				// found word animation
