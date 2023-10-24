@@ -11,6 +11,7 @@ export class BoardScene extends Phaser.Scene {
 	tileContainerGroup!: Phaser.GameObjects.Group;
 	gameTimeText!: Phaser.GameObjects.BitmapText;
 	chainText!: Phaser.GameObjects.BitmapText;
+	scoreText!: Phaser.GameObjects.BitmapText;
 	chainScoreText!: Phaser.GameObjects.BitmapText;
 	gameTimeTextPrefix = "⏳";
 	gameTimer?: Phaser.Time.TimerEvent;
@@ -114,7 +115,7 @@ export class BoardScene extends Phaser.Scene {
 				0,
 				"gothic",
 				this.gameTimeTextPrefix,
-				Math.floor(this.game.canvas.width / approxGameTimeTextLength)
+				Math.floor(this.game.canvas.width / approxGameTimeTextLength),
 			)
 			.setTintFill(0x000000)
 			.setOrigin(0.5, 0)
@@ -124,19 +125,25 @@ export class BoardScene extends Phaser.Scene {
 		this.chainText = this.add
 			.bitmapText(
 				this.cameras.main.centerX,
-				140,
+				130,
 				"gothic",
 				"",
-				this.gameTimeText.fontSize / 2
+				this.gameTimeText.fontSize / 2,
 			)
 			.setTintFill(0x000000)
 			.setOrigin(0.5, 0.5);
 
 		this.chainScoreText = this.add
-			.bitmapText(0, 0, "gothic", "", this.chainText.fontSize * 0.5)
+			.bitmapText(0, 0, "gothic", "", this.chainText.fontSize / 2)
 			.setTintFill(0x000000)
 			.setOrigin(0.5, 0.5);
 		Phaser.Display.Align.To.BottomCenter(this.chainScoreText, this.chainText, 0, 40);
+
+		this.scoreText = this.add
+			.bitmapText(0, 0, "gothic", "0", this.chainText.fontSize)
+			.setTintFill(0x000000)
+			.setOrigin(0.5, 0.5);
+		Phaser.Display.Align.To.BottomCenter(this.scoreText, this.chainScoreText, 0, 10);
 
 		if (DEBUG) {
 			this.gameTimeText.setInteractive().on("pointerdown", this.handleGameEnd, this);
@@ -158,8 +165,8 @@ export class BoardScene extends Phaser.Scene {
 	updateChainColors(color: number) {
 		this.currentChain.forEach((tile) =>
 			(tile.container.getByName(this.TILE_IMAGE_KEY) as Phaser.GameObjects.Image).setTint(
-				color
-			)
+				color,
+			),
 		);
 	}
 
@@ -169,7 +176,7 @@ export class BoardScene extends Phaser.Scene {
 			this.GAME_TIME_SECS * 1000,
 			this.handleGameEnd,
 			[],
-			this
+			this,
 		);
 	}
 
@@ -201,7 +208,7 @@ export class BoardScene extends Phaser.Scene {
 						this.cameras.main.height / 2 +
 							(row - this.GRID_SIZE / 2) * this.TILE_SIZE +
 							this.TILE_SIZE / 2,
-						tileImage
+						tileImage,
 					)
 					.setVisible(false);
 
@@ -221,7 +228,7 @@ export class BoardScene extends Phaser.Scene {
 								fontSize: `${this.TILE_SIZE / 2}px`,
 								fontFamily: "Interstate",
 							})
-							.setOrigin(0.5)
+							.setOrigin(0.5),
 					)
 					.setDepth(this.LETTER_DEPTH);
 
@@ -236,22 +243,22 @@ export class BoardScene extends Phaser.Scene {
 				const topPoint = new Phaser.Geom.Point(0, -tileImage.displayHeight / 2 - NUDGE);
 				const topRightPoint = new Phaser.Geom.Point(
 					tileImage.displayWidth * 0.37,
-					-tileImage.displayHeight * 0.37
+					-tileImage.displayHeight * 0.37,
 				);
 				const rightPoint = new Phaser.Geom.Point(tileImage.displayWidth / 2 + NUDGE, 0);
 				const bottomRightPoint = new Phaser.Geom.Point(
 					tileImage.displayWidth * 0.37,
-					tileImage.displayHeight * 0.37
+					tileImage.displayHeight * 0.37,
 				);
 				const bottomPoint = new Phaser.Geom.Point(0, tileImage.displayHeight / 2 + NUDGE);
 				const bottomLeftPoint = new Phaser.Geom.Point(
 					-tileImage.displayWidth * 0.37,
-					tileImage.displayHeight * 0.37
+					tileImage.displayHeight * 0.37,
 				);
 				const leftPoint = new Phaser.Geom.Point(-tileImage.displayWidth / 2 - NUDGE, 0);
 				const topLeftPoint = new Phaser.Geom.Point(
 					-tileImage.displayWidth * 0.37,
-					-tileImage.displayHeight * 0.37
+					-tileImage.displayHeight * 0.37,
 				);
 				tileContainer
 					.setInteractive(
@@ -265,7 +272,7 @@ export class BoardScene extends Phaser.Scene {
 							leftPoint,
 							topLeftPoint,
 						]),
-						Phaser.Geom.Polygon.Contains
+						Phaser.Geom.Polygon.Contains,
 					)
 					.on("pointerdown", () => {
 						this.isDragging = true;
@@ -291,7 +298,7 @@ export class BoardScene extends Phaser.Scene {
 					topLeftContainer.getBounds().x,
 					topLeftContainer.getBounds().y,
 					this.TILE_SIZE * this.GRID_SIZE,
-					this.TILE_SIZE * this.GRID_SIZE
+					this.TILE_SIZE * this.GRID_SIZE,
 				)
 				.setOrigin(0, 0)
 				.setInteractive(
@@ -299,9 +306,9 @@ export class BoardScene extends Phaser.Scene {
 						topLeftContainer.getBounds().x,
 						topLeftContainer.getBounds().y,
 						this.TILE_SIZE * this.GRID_SIZE,
-						this.TILE_SIZE * this.GRID_SIZE
+						this.TILE_SIZE * this.GRID_SIZE,
 					),
-					pointExitRect
+					pointExitRect,
 				)
 				.setDepth(-1);
 
@@ -342,7 +349,7 @@ export class BoardScene extends Phaser.Scene {
 				lastTileInChain.row,
 				lastTileInChain.col,
 				tile.row,
-				tile.col
+				tile.col,
 			) <= Math.sqrt(2);
 		if (lastTileInChain && !isTileReachable) {
 			if ((lastTileInChain && !lastTileInChain.container) || !tile.container) {
@@ -422,14 +429,14 @@ export class BoardScene extends Phaser.Scene {
 					prevTile.container.x,
 					prevTile.container.y,
 					tile.container.x,
-					tile.container.y
+					tile.container.y,
 				);
 			}
 
 			this.chainLineGraphic.fillCircle(
 				tile.container.x,
 				tile.container.y,
-				this.LINE_THICKNESS / 2
+				this.LINE_THICKNESS / 2,
 			);
 			prevTile = tile;
 		});
@@ -448,7 +455,7 @@ export class BoardScene extends Phaser.Scene {
 				},
 				onComplete: (_tween, targets) => {
 					targets.forEach((text: Phaser.GameObjects.BitmapText) =>
-						text.setText("").setAlpha(1).setScale(1)
+						text.setText("").setAlpha(1).setScale(1),
 					);
 				},
 			},
@@ -466,6 +473,7 @@ export class BoardScene extends Phaser.Scene {
 					console.debug(`Found word "${word}" of score: ${wordScore}`);
 				}
 				this.curScore += wordScore;
+				this.scoreText.text = this.curScore.toString();
 				this.foundWords.add(word);
 
 				// found word animation
