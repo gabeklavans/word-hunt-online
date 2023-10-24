@@ -1,8 +1,8 @@
 import * as Phaser from "phaser";
 
 export const WHOEvents = {
-	BoardDone: "boardDone",
-	GameStart: "gameStart",
+    BoardDone: "boardDone",
+    GameStart: "gameStart",
 };
 
 const eventsCenter = new Phaser.Events.EventEmitter();
