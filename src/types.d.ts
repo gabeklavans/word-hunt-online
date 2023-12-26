@@ -35,6 +35,8 @@ type ScoredPlayer = {
 	score?: number;
 	words: string[];
 	name: string;
+	started: boolean;
+	done: boolean;
 };
 
 type SessionView = {
