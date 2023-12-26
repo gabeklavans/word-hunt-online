@@ -28,7 +28,7 @@ document.getElementById("left-button")?.addEventListener("pointerdown", () => {
 		console.warn("Somehow tried to reduce below first player");
 		return;
 	}
-	
+
 	new Audio("assets/sfx/drag.mp3").play();
 
 	otherPlayerIdx--;
@@ -120,8 +120,17 @@ async function init() {
 		return;
 	}
 	(document.getElementById("mainPlayerName") as HTMLHeadingElement).innerHTML = mainPlayer.name;
-	(document.getElementById("mainPlayerScore") as HTMLHeadingElement).innerHTML =
-		mainPlayer.score !== undefined ? mainPlayer.score.toString() : "waiting...";
+
+	let scoreText = "waiting...";
+	if (mainPlayer.done && mainPlayer.score) {
+		scoreText = mainPlayer.score.toString();
+	} else if (!mainPlayer.done && mainPlayer.score) {
+		scoreText = `${mainPlayer.score.toString()}...`
+	} else if (mainPlayer.done && !mainPlayer.score) {
+		console.warn(`Player ${mainPlayer.name} was marked as done but score was null`);
+	}
+
+	(document.getElementById("mainPlayerScore") as HTMLHeadingElement).innerHTML = scoreText;
 
 	populateColumnWords(mainPlayerScoreDiv);
 	updateScoreColWords(mainPlayer, mainPlayerScoreDiv);
@@ -157,14 +166,25 @@ function updateOtherPlayerColumn() {
 	}
 
 	(document.getElementById("otherPlayerName") as HTMLHeadElement).innerHTML = otherPlayer.name;
-	(document.getElementById("otherPlayerScore") as HTMLHeadElement).innerHTML =
-		otherPlayer.score !== undefined ? otherPlayer.score.toString() : "waiting...";
+
+	let scoreText = "waiting...";
+	if (otherPlayer.done && otherPlayer.score) {
+		scoreText = otherPlayer.score.toString();
+	} else if (!otherPlayer.done && otherPlayer.score) {
+		scoreText = `${otherPlayer.score.toString()}...`
+	} else if (otherPlayer.done && !otherPlayer.score) {
+		console.warn(`Player ${otherPlayer.name} was marked as done but score was null`);
+	}
+
+	(document.getElementById("otherPlayerScore") as HTMLHeadElement).innerHTML = scoreText;
 
 	updateScoreColWords(otherPlayer, otherPlayerScoreDiv);
 }
 
 function populateColumnWords(scoreCol: HTMLDivElement) {
-	console.log(sortedBoardWords);
+	if (DEBUG) {
+		console.debug(sortedBoardWords);
+	}
 	for (const word of sortedBoardWords) {
 		const wordRow = document.createElement("span");
 		const wordRowWord = document.createElement("p");
@@ -179,7 +199,9 @@ function populateColumnWords(scoreCol: HTMLDivElement) {
 }
 
 function updateScoreColWords(player: ScoredPlayer, scoreCol: HTMLDivElement) {
-	console.log(`updating score col for ${player.name}`);
+	if (DEBUG) {
+		console.debug(`updating score col for ${player.name}`);
+	}
 
 	for (const wordScoreRowSpan of scoreCol.children) {
 		const [word, score] = Array.from(wordScoreRowSpan.children).map((child) => child.innerHTML);
