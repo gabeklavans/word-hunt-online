@@ -17,7 +17,7 @@ export async function getSessionInfo(sessionId: string) {
 export async function sendResults(
 	sessionId: string,
 	userId: string,
-	data: { score: number; words: string[] }
+	data: { partial: boolean; score: number; words: string[] }
 ) {
 	try {
 		return await fetch(`${SERVER_URL}/result/${sessionId}/${userId}`, {

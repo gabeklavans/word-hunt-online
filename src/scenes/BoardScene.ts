@@ -186,6 +186,7 @@ export class BoardScene extends Phaser.Scene {
 		}
 		// send result to bot
 		await sendResults(SESSION_ID ?? "", USER_ID ?? "", {
+			partial: false,
 			score: this.curScore,
 			words: Array.from(this.foundWords),
 		});
@@ -487,6 +488,12 @@ export class BoardScene extends Phaser.Scene {
 						},
 					},
 				});
+				
+			sendResults(SESSION_ID ?? "", USER_ID ?? "", {
+				partial: true,
+				score: this.curScore,
+				words: Array.from(this.foundWords),
+			});
 			} else {
 				this.badSfx.play({ volume: 0.1, rate: 1.5 });
 			}
