@@ -29,8 +29,6 @@ document.getElementById("left-button")?.addEventListener("pointerdown", () => {
 		return;
 	}
 
-	new Audio("assets/sfx/drag.mp3").play();
-
 	otherPlayerIdx--;
 	updateOtherPlayerColumn();
 });
@@ -40,8 +38,6 @@ document.getElementById("right-button")?.addEventListener("pointerdown", () => {
 		console.warn("Somehow tried to increase past the last player");
 		return;
 	}
-
-	new Audio("assets/sfx/drag.mp3").play();
 
 	otherPlayerIdx++;
 	updateOtherPlayerColumn();
