@@ -23,6 +23,12 @@ let showAllWords: boolean;
 
 setInterval(checkForUpdatedSession, CHECK_UPDATE_INTERVAL_MS);
 
+document.querySelectorAll(".disable-double-tap-zoom").forEach((e) => {
+	e.addEventListener("touchstart", (event) => {
+		event.preventDefault();
+	});
+});
+
 document.getElementById("left-button")?.addEventListener("pointerdown", () => {
 	if (otherPlayerIdx <= 0) {
 		console.warn("Somehow tried to reduce below first player");
@@ -97,12 +103,12 @@ async function init() {
 
 	// descending score order, else ascending alphabetical order
 	sortedBoardWords = session.board.words.sort((a, b) =>
-		a.length !== b.length ? b.length - a.length : a.localeCompare(b)
+		a.length !== b.length ? b.length - a.length : a.localeCompare(b),
 	);
 	wordsFoundByPlayers = new Set(
 		Object.values(session.scoredUsers)
 			.map((scoredUser) => scoredUser.words)
-			.flat()
+			.flat(),
 	);
 	console.log(`sorted words: ${sortedBoardWords}
     found words:`);
@@ -121,7 +127,7 @@ async function init() {
 	if (mainPlayer.done && mainPlayer.score) {
 		scoreText = mainPlayer.score.toString();
 	} else if (!mainPlayer.done && mainPlayer.score) {
-		scoreText = `${mainPlayer.score.toString()}...`
+		scoreText = `${mainPlayer.score.toString()}...`;
 	} else if (mainPlayer.done && !mainPlayer.score) {
 		console.warn(`Player ${mainPlayer.name} was marked as done but score was null`);
 	}
@@ -167,7 +173,7 @@ function updateOtherPlayerColumn() {
 	if (otherPlayer.done && otherPlayer.score) {
 		scoreText = otherPlayer.score.toString();
 	} else if (!otherPlayer.done && otherPlayer.score) {
-		scoreText = `${otherPlayer.score.toString()}...`
+		scoreText = `${otherPlayer.score.toString()}...`;
 	} else if (otherPlayer.done && !otherPlayer.score) {
 		console.warn(`Player ${otherPlayer.name} was marked as done but score was null`);
 	}

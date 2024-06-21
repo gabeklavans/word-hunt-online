@@ -105,8 +105,3 @@ span > p {
 	padding: 0;
 	font-size: medium;
 }
-
-.disable-dbl-tap-zoom {
-  touch-action: manipulation;
-}
-
