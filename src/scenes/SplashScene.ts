@@ -25,7 +25,9 @@ export class SplashScene extends Scene {
 				this.cameras.main.centerX,
 				300,
 				"gothic",
-				"Connect letters together to make as many words as you can."
+				"Connect letters together to make as many words as you can.\n\n"+
+				"Games expire after 3 days.\n\n"+
+				"Tap the placement buttons in the Telegram message to quickly view players' scores."
 			)
 			.setOrigin(0.5)
 			.setDepth(3)
