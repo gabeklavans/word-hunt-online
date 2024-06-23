@@ -1,2 +1,2 @@
-export const SERVER_URL = "https://gj.dabe.tech";
-export const DEBUG = false;
+export const SERVER_URL = "https://gamejay-qa.dabe.tech";
+export const DEBUG = true;
